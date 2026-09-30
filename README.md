@@ -17,6 +17,11 @@ The LLM is the better detector on F1: 0.880 against Jev's 0.856 at k = 1, and ah
 
 [Read the loop](jev_ids/run.py) · [The request template](prompts/nsl-kdd/jev.json) · [Glossary](CONTEXT.md)
 
+> **This fork adds the adversarial question.** The numbers above come from one context, held fixed while k moved. [The context
+> study](docs/adversarial.md) holds k fixed and moves the context instead — the task description, the column names, the category
+> descriptions, the shape of the record, the truth of the example labels — and reports what each move does to the verdict, with an agent
+> that decides which move to try next. A baseline run of the fork is byte for byte the paper's run, so the two compare as equals.
+
 ## How it works
 
 Jev is a System One Model. Instead of writing text, it reads a `state` and answers typed questions about it with probabilities. Jev IDS puts one flow into the state, next to the instructions, the column names, the five category descriptions and the labeled examples, and asks two questions. `is_attack` comes back as a probability. `category` comes back as one of five options with a confidence. The verdict is attack when the probability reaches 0.5.
@@ -39,6 +44,8 @@ cd jev-ids
 uv sync
 # .env: TYPESAFE_API_KEY for Jev. Gemini needs `gcloud auth application-default login` and GOOGLE_GENAI_USE_VERTEXAI=true,
 # GOOGLE_CLOUD_PROJECT and GOOGLE_CLOUD_LOCATION=global in the environment; DEEPSEEK_API_KEY and CHATGPT_CLIENT_ID only for the other LLMs.
+# The two detectors that run on your own hardware read their server's address, so it may be another machine:
+# LAYA_BASE_URL (and LAYA_API_KEY when the server asks for one) for `laya-serve`, OLLAMA_HOST for Ollama.
 ```
 
 Download [NSL-KDD](https://www.kaggle.com/datasets/hassan06/nslkdd) into `data/raw/nsl-kdd/` and prepare it once:
@@ -55,6 +62,8 @@ The smoke split is five flows. The run writes `results/<timestamp>-nsl-kdd-jev-s
 ```bash
 uv run jev-ids run --dataset data/nsl-kdd/dataset.json --detector jev --split pilot --k 0,1,2,4,8 --seeds 0,1,2
 uv run jev-ids run --dataset data/nsl-kdd/dataset.json --detector llm:gemini --model gemini-3.6-flash --split pilot --k 0,1,2,4,8
+uv run jev-ids run --dataset data/nsl-kdd/dataset.json --detector llm:ollama --model qwen3:8b --split pilot --k 0,1  # OLLAMA_HOST
+uv run jev-ids run --dataset data/nsl-kdd/dataset.json --detector laya --split pilot --k 0,1                        # LAYA_BASE_URL
 uv run jev-ids run --dataset data/nsl-kdd/dataset.json --detector random_forest --split pilot --k 1,2,4,8,all
 uv run jev-ids run --dataset data/nsl-kdd/dataset.json --detector isolation_forest --split pilot --k all
 uv run jev-ids metrics results/<run_id> [results/<run_id> ...] > results/summary.csv
@@ -62,6 +71,22 @@ uv run jev-ids compare --a results/<jev_run> --b results/<rf_run> --subset novel
 ```
 
 k is the number of labeled examples per category. k = 1 with five categories means five examples, and `all` means the whole pool. `metrics` prints one CSV row per detector and k with F1, recall on zero-day attacks (`novel` in the code) and per category, PR-AUC and ROC-AUC of p_attack, tokens, latency and cost. `compare` pairs two runs flow by flow and runs McNemar's test on the discordant pairs, because only the flows two detectors disagree on tell them apart. Cost is computed offline as tokens times the list prices in [`prices.json`](prices.json), for every detector alike.
+
+## Move the context instead of k
+
+```bash
+uv run jev-ids run --dataset data/nsl-kdd/dataset.json --detector jev --split pilot --k 1 --seeds 0 \
+  --context instructions=none,columns=absent
+uv run jev-ids sweep --dataset data/nsl-kdd/dataset.json --detector jev --split pilot --k 1 --seeds 0 \
+  --strategy ladder --factors instructions,columns,categories --budget 12
+```
+
+`--context` fixes one point of the context space by hand; `sweep` hands the choice to an agent, which runs the baseline first and then
+decides what to try next: `ladder` measures every level of every factor against it, `greedy` climbs from the best so far, `attack` has an LLM
+write the next task description. `--objective min` asks which context makes the detector worse, which is the adversarial reading. The sweep
+directory holds one ordinary run per trial, `sweep.json` and `trials.csv`, and every prediction row carries its context level, so `metrics`
+groups by it and `compare` settles two levels on the flows they disagree on. The factors, the levels and the cost of a budget are in
+[`docs/adversarial.md`](docs/adversarial.md).
 
 ## Reproduce the paper
 
@@ -78,18 +103,21 @@ k is the number of labeled examples per category. k = 1 with five categories mea
 
 ## Small enough to read
 
-| File                                                                   | Job                                                                           |
-| ---------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| [cli.py](jev_ids/cli.py)                                               | `run`, `metrics` and `compare`                                                |
-| [dataset.py](jev_ids/dataset.py)                                       | The card, the pool, the splits and the k-shot example draw                    |
-| [run.py](jev_ids/run.py)                                               | The loop, cell by cell and flow by flow, and the three files of a run         |
-| [records.py](jev_ids/records.py)                                       | One prediction row and its JSONL                                              |
-| [metrics.py](jev_ids/metrics.py)                                       | F1, recall per category, PR-AUC, tokens, cost, latency, the paired comparison |
-| [detectors/jev.py](jev_ids/detectors/jev.py)                           | Jev through TypeSafe's API, one flow per request                              |
-| [detectors/llm.py](jev_ids/detectors/llm.py)                           | The LLM baselines through Agno                                                |
-| [detectors/random_forest.py](jev_ids/detectors/random_forest.py)       | The classical baseline                                                        |
-| [detectors/isolation_forest.py](jev_ids/detectors/isolation_forest.py) | The unsupervised baseline, fitted on benign traffic alone                     |
-| [prompts/nsl-kdd/](prompts/nsl-kdd)                                    | `jev.json`, the whole request template; `llm.md`, the agent's instructions    |
+| File                                                                   | Job                                                                                                         |
+| ---------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| [cli.py](jev_ids/cli.py)                                               | `run`, `sweep`, `redo-errors`, `metrics` and `compare`                                                      |
+| [dataset.py](jev_ids/dataset.py)                                       | The card, the pool, the splits and the k-shot example draw                                                  |
+| [run.py](jev_ids/run.py)                                               | The loop, cell by cell and flow by flow, and the three files of a run                                       |
+| [context.py](jev_ids/context.py)                                       | The context space: the factors, their levels and the two renderings                                         |
+| [agent.py](jev_ids/agent.py)                                           | The agent that moves through that space, and the trail it writes                                            |
+| [records.py](jev_ids/records.py)                                       | One prediction row and its JSONL                                                                            |
+| [metrics.py](jev_ids/metrics.py)                                       | F1, recall per category, PR-AUC, tokens, cost, latency, the paired comparison                               |
+| [detectors/jev.py](jev_ids/detectors/jev.py)                           | Jev through TypeSafe's API, one flow per request                                                            |
+| [detectors/laya.py](jev_ids/detectors/laya.py)                         | Laya, the open-source System 1 engine, on your own hardware                                                 |
+| [detectors/llm.py](jev_ids/detectors/llm.py)                           | The LLM baselines through Agno, Ollama among them                                                           |
+| [detectors/random_forest.py](jev_ids/detectors/random_forest.py)       | The classical baseline                                                                                      |
+| [detectors/isolation_forest.py](jev_ids/detectors/isolation_forest.py) | The unsupervised baseline, fitted on benign traffic alone                                                   |
+| [prompts/nsl-kdd/](prompts/nsl-kdd)                                    | `jev.json`, the request template; `llm.md`, the agent's instructions; `context.json`, the levels above them |
 
 ## Evidence and limits
 

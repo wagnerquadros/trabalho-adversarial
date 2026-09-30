@@ -149,7 +149,7 @@ def test_summarize_has_one_row_per_group_averaged_over_cells() -> None:
         prediction["model"] = "jev-1.13.0"
     zero_shot, one_shot = metrics.summarize(predictions)
     assert (zero_shot["k"], one_shot["k"]) == (0, 1)
-    assert list(one_shot)[:5] == ["dataset", "detector", "model", "split", "k"]
+    assert list(one_shot)[:6] == ["dataset", "detector", "model", "split", "context", "k"]
     assert one_shot["dataset"] == "test"
     assert (one_shot["cells"], one_shot["flows"], one_shot["predictions"]) == (2, 2, 4)
     # The seed 0 cell has F1 = 1 and the seed 1 cell F1 = 0.

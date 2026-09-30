@@ -10,6 +10,7 @@ from typing import Any
 import pytest
 
 from jev_ids import ROOT, dataset, records, run
+from jev_ids.context import ContextSpec
 from jev_ids.detectors import jev
 from jev_ids.detectors.isolation_forest import IsolationForestDetector
 from jev_ids.detectors.random_forest import RandomForestDetector
@@ -84,14 +85,14 @@ def test_execute_covers_every_cell_in_order_and_writes_the_three_files(card: Pat
     assert detector.calls == zero_shot * 2 + one_shot * 2
     assert {p["n_examples"] for p in predictions} == {0, 3}
     shared = {
-        *("run_id", "dataset", "detector", "model", "split", "prompt_hash"),
+        *("run_id", "dataset", "detector", "model", "split", "prompt_hash", "context"),
         *("k", "seed", "repetition", "n_examples", "row_id", "is_attack", "classification_verdict"),
         *("category_true", "novel_attack", "p_attack", "category_pred"),
         *("latency_ms", "usage", "request_id", "ts_utc"),
     }
     assert all(set(p) == shared for p in predictions)
-    assert {(p["dataset"], p["detector"], p["prompt_hash"]) for p in predictions} == {("test", "fake", "h")}
-    assert run_dir.name.endswith("-test-fake-smoke")
+    assert {(p["dataset"], p["detector"], p["prompt_hash"], p["context"]) for p in predictions} == {("test", "fake", "h", "baseline")}
+    assert run_dir.name.endswith("-test-fake-smoke")  # the baseline adds nothing to the name
     responses = (run_dir / "responses.jsonl").read_text(encoding="utf-8").splitlines()
     assert len(responses) == len(predictions)
     assert json.loads(responses[0])["request_id"] == predictions[0]["request_id"]
@@ -146,8 +147,8 @@ def test_redo_errors_judges_the_failed_and_the_missing_flows_in_their_cells(
     redone = after[len(kept) :]
     expected = [(0, 101, 0, 1.0), (1, 101, 3, 1.0), (1, 102, 3, 1.0)]
     assert [(p["k"], p["row_id"], p["n_examples"], p["p_attack"]) for p in redone] == expected
-    assert {(p["run_id"], p["dataset"], p["detector"], p["model"], p["split"], p["prompt_hash"]) for p in after} == {
-        (run_dir.name, "test", "fake", "fake-1", "smoke", "h")
+    assert {(p["run_id"], p["dataset"], p["detector"], p["model"], p["split"], p["prompt_hash"], p["context"]) for p in after} == {
+        (run_dir.name, "test", "fake", "fake-1", "smoke", "h", "baseline")
     }
     assert detector.calls[-3:] == [(101, 0), (101, 3), (102, 3)]
     config_json = json.loads((run_dir / "config.json").read_text(encoding="utf-8"))
@@ -187,7 +188,7 @@ def test_run_from_spec_reads_the_dataset_and_fits_the_forest_on_the_pool(
     assert not (run_dir / "responses.jsonl").exists()  # the forest has no raw answer
 
 
-def test_build_detector_knows_the_five_names(card: Path) -> None:
+def test_build_detector_knows_every_name(card: Path) -> None:
     config = dataset.load_config(card)
     forest = run.build_detector(run.RunSpec("random_forest", card, "smoke", (1,), (0,)), config)
     assert isinstance(forest, RandomForestDetector)
@@ -207,8 +208,19 @@ def test_build_detector_knows_the_five_names(card: Path) -> None:
     assert (deepseek.name, deepseek.model) == ("llm:deepseek", "deepseek-flash")
     terra_spec = run.RunSpec("llm:openai", NSL_KDD, "smoke", (0,), (0,), model_id="gpt-5.6-terra")
     assert run.build_detector(terra_spec, nsl_kdd).model == "gpt-5.6-terra"
-    with pytest.raises(NotImplementedError):
-        run.build_detector(run.RunSpec("unknown", card, "smoke", (0,), (0,)), config)
+    # Laya reads Jev's own file, so the two carry the same prompt_hash at the same context level.
+    laya_spec = run.RunSpec("laya", NSL_KDD, "smoke", (0,), (0,))
+    reader = run.build_detector(laya_spec, nsl_kdd)
+    assert (reader.name, reader.model, reader.prompt_hash) == ("laya", "multilingual", judge.prompt_hash)
+    assert run.build_detector(run.RunSpec("laya", NSL_KDD, "smoke", (0,), (0,), model_id="english"), nsl_kdd).model == "english"
+    # Ollama serves whatever its machine pulled, so it has no default model and says so instead of guessing one.
+    ollama_spec = run.RunSpec("llm:ollama", NSL_KDD, "smoke", (0,), (0,), model_id="qwen3:8b")
+    assert run.build_detector(ollama_spec, nsl_kdd).model == "qwen3:8b"
+    with pytest.raises(ValueError, match="no default model"):
+        run.build_detector(run.RunSpec("llm:ollama", NSL_KDD, "smoke", (0,), (0,)), nsl_kdd)
+    for unknown in ("unknown", "llm:unknown"):
+        with pytest.raises(NotImplementedError):
+            run.build_detector(run.RunSpec(unknown, card, "smoke", (0,), (0,)), config)
 
 
 def test_run_dir_name_has_timestamp_dataset_detector_and_split(card: Path) -> None:
@@ -225,6 +237,11 @@ def test_k_all_is_for_the_forests_only_and_each_forest_has_its_k_guard() -> None
     with pytest.raises(ValueError, match="k = all only"):
         run.check_spec(run.RunSpec("isolation_forest", NSL_KDD, "smoke", (1, None), (0,)), "isolation_forest")
     run.check_spec(run.RunSpec("isolation_forest", NSL_KDD, "smoke", (None,), (0,)), "isolation_forest")
+    # A forest reads the record as numbers in card order, so a labeled record is not for it.
+    labeled = ContextSpec(record="labeled")
+    with pytest.raises(ValueError, match="detectors that read a prompt"):
+        run.check_spec(run.RunSpec("random_forest", NSL_KDD, "smoke", (1,), (0,), context=labeled), "random_forest")
+    run.check_spec(run.RunSpec("jev", NSL_KDD, "smoke", (1,), (0,), context=labeled), "jev")
 
 
 def test_sample_examples_is_balanced_nested_and_deterministic() -> None:

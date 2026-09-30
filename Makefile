@@ -57,3 +57,30 @@ paper-isolation-forest:
 
 paper-summary:
 	uv run jev-ids metrics results/paper/*/ > results/paper/summary.csv
+
+# The context study (docs/adversarial.md): k is held fixed and the context moves. One sweep per strategy, into results/context/, each with
+# its own run directory per trial. `DETECTOR` and `SPLIT` pick what is under study, `BUDGET` what it costs: a trial is one run of the split,
+# so `pilot` at k = 1 is 300 calls per trial. Override any of them: `make context-ladder DETECTOR=laya BUDGET=20`.
+SWEEP = uv run jev-ids sweep --dataset data/nsl-kdd/dataset.json --results-dir results/context --k 1 --seeds 0
+DETECTOR ?= jev
+SPLIT ?= pilot
+BUDGET ?= 12
+ATTACKER ?= llm:deepseek
+.PHONY: context context-ladder context-greedy context-attack context-summary
+
+context: context-ladder context-greedy context-summary
+
+# Which factor matters, and how much: every level of every factor against the baseline, one factor at a time.
+context-ladder:
+	$(SWEEP) --detector $(DETECTOR) --split $(SPLIT) --strategy ladder --budget $(BUDGET)
+
+# Which context hurts most, allowed to combine factors: the adversarial reading of the same measurement.
+context-greedy:
+	$(SWEEP) --detector $(DETECTOR) --split $(SPLIT) --strategy greedy --objective min --budget $(BUDGET)
+
+# The task description written during the search instead of chosen in advance; needs the attacker's own key.
+context-attack:
+	$(SWEEP) --detector $(DETECTOR) --split $(SPLIT) --strategy attack --objective min --budget $(BUDGET) --attacker $(ATTACKER)
+
+context-summary:
+	uv run jev-ids metrics results/context/*/*/ > results/context/summary.csv

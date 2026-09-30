@@ -5,7 +5,7 @@ In reading order:
 - `JevDetector`: holds the request template of `prompts/<dataset>/jev.json` and the SDK client, built on the first call; `predict` judges
   one Flow per request.
 - `request_body`: the template with the Flow and the Examples in its `state`.
-- `attempt` and `post`: one request, retried when TypeSafe is rate-limited or overloaded.
+- `attempt` and `post`: one request, retried when TypeSafe is rate-limited or overloaded; Laya (`laya.py`) retries through the same `post`.
 - `measurements`: what one successful answer measured.
 
 The template is the whole conversation with Jev: a `state` (the instructions, the column header, the Category descriptions) and two
@@ -15,9 +15,10 @@ Flow under test at `flows.under_test` and the labeled `examples`. One request ju
 `state`, `model` and `questions` exactly as the file has them, so the file still describes the request byte for byte.
 """
 
+import functools
 import json
 import time
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from typing import Any
 
 from typesafe_sdk import RetryPolicy, SystemOneResponse, TypeSafeAPIConnectionError, TypeSafeAPIError, TypeSafeClient
@@ -60,7 +61,7 @@ class JevDetector:
         if self.client is None:
             # The SDK reads TYPESAFE_API_KEY on its own and refuses to start without it.
             self.client = TypeSafeClient(retry=NO_RETRY, timeout=TIMEOUT_SECONDS)
-        return post(self.client, request_body(self.template, flow, examples))
+        return post(functools.partial(attempt, self.client, request_body(self.template, flow, examples)))
 
 
 def request_body(template: str, flow: Flow, examples: Sequence[Flow]) -> dict[str, Any]:
@@ -91,17 +92,17 @@ def attempt(client: TypeSafeClient, body: dict[str, Any]) -> dict[str, Any]:
     return measurements(response.raw_http_response.json(), (time.perf_counter() - started) * 1000)
 
 
-def post(client: TypeSafeClient, body: dict[str, Any]) -> dict[str, Any]:
-    """Up to MAX_ATTEMPTS attempts with exponential backoff.
+def post(send: Callable[[], dict[str, Any]]) -> dict[str, Any]:
+    """Up to MAX_ATTEMPTS calls of `send`, one request each, with exponential backoff.
 
     Only a retryable failure earns another attempt. `latency_ms` measures the successful attempt alone and `retries` counts the failed ones
     before it.
     """
-    result = attempt(client, body)
+    result = send()
     retries = 0
     while result.get("retryable") and retries < MAX_ATTEMPTS - 1:
         time.sleep(BACKOFF_SECONDS * 2**retries)
-        result = attempt(client, body)
+        result = send()
         retries += 1
     result.pop("retryable", None)
     return {**result, "retries": retries}

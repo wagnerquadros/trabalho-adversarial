@@ -55,7 +55,7 @@ def fake_agent(monkeypatch: pytest.MonkeyPatch) -> type[FakeAgent]:
 def test_instructions_fill_the_examples_placeholder_or_remove_it() -> None:
     examples = sample_examples(TRAIN, 1, 0, CATEGORIES)
     text = llm.instructions(LLM_PROMPT["text"], examples)
-    assert text.startswith("You are given one record")
+    assert text.startswith("# Overview\n\nYou are given one record")
     assert "- `dos`:" in text
     assert "JSON" in text
     assert text.count(" => ") == 4  # the header line plus three examples
@@ -63,7 +63,8 @@ def test_instructions_fill_the_examples_placeholder_or_remove_it() -> None:
     assert "{examples}" not in text
     zero_shot = llm.instructions(LLM_PROMPT["text"], [])
     assert "=>" not in zero_shot
-    assert "\na,b,c\n\nAnswer only" in zero_shot
+    assert "{examples}" not in zero_shot
+    assert "\na,b,c\n" in zero_shot
 
 
 def test_happy_path_builds_one_agent_per_call_and_keeps_agno_metrics(

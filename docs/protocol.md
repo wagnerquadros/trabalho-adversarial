@@ -3,6 +3,10 @@
 How the reported numbers of Jev IDS are produced, so that anyone with the repository, the raw NSL-KDD files and the API keys can produce
 them again. Everything a run depends on is either committed here or written into the run's `config.json`.
 
+This protocol moves k and holds the context fixed. [`docs/adversarial.md`](adversarial.md) is its mirror: it holds k fixed and moves the
+context instead. A run of that study at the baseline context is a run of this protocol, byte for byte — same card, same split, same prompt
+hashes — so the two sets of numbers compare as equals.
+
 ## Question
 
 How well does Jev detect intrusions in NSL-KDD flow records as the number of labeled examples per category (k) grows, against an LLM, a
@@ -18,6 +22,7 @@ Random Forest and an unsupervised Isolation Forest, and at what cost and latency
 | `paper` split    | `data/nsl-kdd/splits/paper.csv`, drawn by `scripts/draw_split.py` with seed 20260920 | 2,000 flows of KDDTest+ (874 normal, 642 dos, 248 r2l, 213 probe, 23 u2r), 300 of them novel attacks; disjoint from `internal`, `pilot`, `smoke`, `hard` and `mid`; sha256 written into `config.json` |
 | Jev request      | `prompts/nsl-kdd/jev.json`                                                           | `prompt_hash` in every row; model `jev-1.13.0`, and every row records the version that answered                                                                                                       |
 | LLM instructions | `prompts/nsl-kdd/llm.md`                                                             | `prompt_hash` in every row; model `gpt-5.6-luna` through the ChatGPT Codex backend                                                                                                                    |
+| Context          | the baseline level of every factor (`jev_ids/context.py`)                            | `context` in `config.json` and in every row, `baseline` here; the two prompt files above are read unchanged at that level                                                                             |
 | Forests          | scikit-learn 1.9.1 (`uv.lock`), 100 trees, `random_state = 0`                        | the Isolation Forest is fitted on the 67,343 benign flows of the pool                                                                                                                                 |
 | Prices           | `prices.json`                                                                        | list prices per 1M tokens, dated                                                                                                                                                                      |
 | Code             | this repository                                                                      | `code_commit` in `config.json`, `-dirty` when the tree had uncommitted changes                                                                                                                        |

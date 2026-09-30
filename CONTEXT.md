@@ -5,6 +5,11 @@ compared with an LLM baseline, a Random Forest and an Isolation Forest on data
 efficiency, cost and latency. NSL-KDD is the first Dataset and NF-UQ-NIDS-v2
 the second.
 
+This fork adds the adversarial question: the paper moved k and held everything
+else fixed, and a Sweep holds k fixed and moves the Context instead, to measure
+how much of a Detector's accuracy comes from the wording around the Flow and
+how far a Context that misinforms can push it.
+
 ## Language
 
 ### Data
@@ -67,10 +72,66 @@ One Flow judged by two Detectors that gave different Verdicts. Only discordant
 pairs tell two Detectors apart.
 _Avoid_: subset, sample, test set.
 
+### Context
+
+**Context**:
+Everything a Detector is shown around the Flow under test: the task
+description, the column names, the Category descriptions, the shape of the
+record, the labels on the Examples. One Run fixes one point of it.
+_Avoid_: prompt (reserved for the file), input, setup.
+
+**Factor**:
+One dimension of the Context that can be moved on its own: `instructions`,
+`columns`, `categories`, `record`, `labels`, `note`.
+_Avoid_: variable, parameter, knob.
+
+**Level**:
+One value a Factor takes. The Levels of a Factor are ordered from the least
+Context to the most, and the paper's Level is one of them.
+_Avoid_: setting, option, variant.
+
+**Ladder**:
+The ordered Levels of a Factor, from least Context to most:
+`instructions` goes none, minimal, paper, expert.
+_Avoid_: scale, axis, range.
+
+**Adversarial level**:
+A Level outside the Ladder, which misinforms rather than informs: `misleading`
+instructions, `shuffled` columns, `swapped` Category descriptions, `flipped`
+and `benign` Example labels, and the `note` inside a record. It is measured,
+never recommended.
+_Avoid_: attack, poison, jailbreak.
+
+**Sweep**:
+One execution of the agent over the Context space: a sequence of Trials, each
+an ordinary Run at one Level, written into one directory with the Trail.
+_Avoid_: experiment, campaign, search.
+
+**Trial**:
+One Context level run and scored, with the paired comparison against the
+baseline Trial. The first Trial of a Sweep is always the baseline.
+_Avoid_: iteration, round, attempt.
+
+**Trail**:
+Every Trial of a Sweep in the order the agent ran them, with the score each
+earned: `sweep.json` and `trials.csv`.
+_Avoid_: log, history, record.
+
+**Objective**:
+Which way a better Trial moves the Detector's F1: `max` asks which Context
+helps, `min` which Context hurts.
+_Avoid_: goal, target, direction.
+
+**Strategy**:
+How the agent picks the next Trial: `ladder` measures every Level against the
+baseline, `greedy` climbs from the best so far, `attack` has an LLM write the
+next task description.
+_Avoid_: policy, method, mode.
+
 ### Detection
 
 **Detector**:
-Anything that turns a Flow plus Examples into a Prediction: Jev, an LLM
+Anything that turns a Flow plus Examples into a Prediction: Jev, Laya, an LLM
 baseline, the Random Forest or the Isolation Forest.
 _Avoid_: model (reserved for a provider's model id), classifier, algorithm.
 
@@ -86,8 +147,8 @@ _Avoid_: label, prediction (when only the binary decision is meant).
 
 **p_attack**:
 The probability that a Flow is an attack, as returned by the Detector: Jev's
-`noul` answer, the number the LLM states, the Random Forest's class probability,
-the Isolation Forest's anomaly score.
+and Laya's `noul` answer, the number the LLM states, the Random Forest's class
+probability, the Isolation Forest's anomaly score.
 _Avoid_: score, confidence.
 
 **confidence**:
@@ -102,7 +163,7 @@ every Detector.
 
 **Run**:
 One execution of one Detector over one Split of one Dataset for a set of k
-values, seeds and repetitions.
+values, seeds and repetitions, at one Context level.
 _Avoid_: experiment, job.
 
 ### Control loop

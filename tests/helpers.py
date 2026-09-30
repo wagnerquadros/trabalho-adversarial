@@ -43,12 +43,13 @@ JEV_PROMPT: dict[str, Any] = {
     ),
     "sha256": "h",
 }
+# The same headings as the committed `llm.md`, because `context.render_llm` finds the state's sections by them.
 LLM_PROMPT: dict[str, Any] = {
     "text": (
-        f"{TASK}\n\nCategories:\n\n"
+        f"# Overview\n\n{TASK}\n\n# Categories\n\n"
         + "\n".join(f"- `{name}`: {text}" for name, text in CATEGORIES.items())
-        + "\n\nColumns of a record, in order:\na,b,c\n{examples}\n"
-        "Answer only with a JSON object.\n"
+        + "\n\n# Columns of a record (in order)\n\na,b,c\n\n# Examples\n\n{examples}\n\n"
+        "# Complementary Information\n\nAnswer only with a JSON object.\n"
     ),
     "sha256": "h",
 }
@@ -96,6 +97,7 @@ def make_prediction(row_id: int, is_attack: int, p_attack: float | None, **overr
         "model": "m",
         "split": "internal",
         "prompt_hash": "h",
+        "context": "baseline",
         "k": 1,
         "seed": 0,
         "repetition": 0,

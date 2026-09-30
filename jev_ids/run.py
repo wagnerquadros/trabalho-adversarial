@@ -3,8 +3,9 @@
 In reading order:
 
 - `RunSpec`: what the CLI resolved for one run.
-- `load_prompt`: any prompt file as text plus its sha256; Jev and the LLMs load their files (`jev.json`, `llm.md`) through it alike.
-- `build_detector` and `check_spec`: the Detector named in the spec, and the two combinations of Detector and k that would only waste calls.
+- `load_prompt`: any prompt file as text plus its sha256; Jev, Laya and the LLMs load their files (`jev.json`, `llm.md`) through it alike.
+- `build_detector` and `check_spec`: the Detector named in the spec, and the combinations of Detector, k and context that would only waste
+  calls.
 - `sample_examples`: k Examples per Category, seeded and nested across k.
 - `execute` and `judge`: the loop itself, cell by cell and Flow by Flow, and the three files of the run.
 - `run_from_spec`: the CLI entry that strings the above together.
@@ -13,6 +14,10 @@ In reading order:
 The loop runs k outermost, then seed, then rep, then every Flow of the split, so the prompt prefix stays constant for as long as possible
 and provider prefix caches get their best chance. One request judges one Flow (B = 1). A call that fails ends as a row with `error`, never
 as a crash, and the run goes on.
+
+A run also fixes a point of the context space (`context.py`): the spec's `ContextSpec` renders the prompt file before the Detector is
+built, relabels the Examples of each cell and rewrites the record of every Flow under test. At the baseline all three are the identity, so
+a baseline run carries the paper's own `prompt_hash` and its rows are comparable with those of `results/paper/`.
 """
 
 import hashlib
@@ -26,19 +31,22 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from jev_ids import ROOT, dataset
+from jev_ids import ROOT, context, dataset
+from jev_ids.context import BASELINE, ContextSpec
 from jev_ids.dataset import Config, Flow
-from jev_ids.detectors import random_forest
+from jev_ids.detectors import llm, random_forest
 from jev_ids.detectors.isolation_forest import IsolationForestDetector
 from jev_ids.detectors.jev import JevDetector
+from jev_ids.detectors.laya import LayaDetector
 from jev_ids.detectors.llm import LLMDetector
 from jev_ids.detectors.random_forest import RandomForestDetector
 from jev_ids.records import append_prediction, complete_prediction, read_predictions, write_config
 
 RESULTS_DIR = ROOT / "results"
+FORESTS = ("random_forest", "isolation_forest")
 
 # The detectors share no base class; the run loop only needs `name`, `model`, `prompt_hash` and `predict`, which each of them has.
-Detector = JevDetector | LLMDetector | RandomForestDetector | IsolationForestDetector
+Detector = JevDetector | LayaDetector | LLMDetector | RandomForestDetector | IsolationForestDetector
 
 
 @dataclass(frozen=True)
@@ -46,14 +54,15 @@ class RunSpec:
     """Everything the CLI resolved for one run; a parameter bundle, nothing more.
 
     Attributes:
-        detector: `jev`, `llm:deepseek`, `llm:openai`, `llm:gemini`, `random_forest` or `isolation_forest`.
+        detector: `jev`, `laya`, `llm:<provider>`, `random_forest` or `isolation_forest`.
         dataset: the card of the dataset, `data/<name>/dataset.json`.
         split: the split to judge, a file under `data/<name>/splits/`.
         k_values: Examples per Category to try; None means the whole pool (the forests).
         seeds: the seeds of the Example draws.
         reps: how often each (k, seed) cell is repeated, for stability.
-        model_id: the provider model, for the LLM detectors; None means default.
+        model_id: the provider model, for the LLM detectors and Laya; None means default.
         results_dir: where run directories are created.
+        context: the point of the context space the run fixes; the paper's baseline by default.
     """
 
     detector: str
@@ -64,6 +73,7 @@ class RunSpec:
     reps: int = 1
     model_id: str | None = None
     results_dir: Path = RESULTS_DIR
+    context: ContextSpec = BASELINE
 
 
 def load_prompt(path: Path) -> dict[str, Any]:
@@ -77,14 +87,18 @@ def load_prompt(path: Path) -> dict[str, Any]:
 
 
 def build_detector(spec: RunSpec, config: Config) -> Detector:
-    """The Detector named in the spec; Jev and the LLMs get their prompt file."""
+    """The Detector named in the spec; the ones that read a prompt get it rendered at the spec's context level.
+
+    Jev and Laya answer the same typed questions over the same state, so they read the same file, `jev.json`.
+    """
     prompts = ROOT / "prompts" / config["name"]
-    if spec.detector == "jev":
-        return JevDetector(load_prompt(prompts / "jev.json"))
-    if spec.detector in ("llm:deepseek", "llm:openai", "llm:gemini"):
-        provider = spec.detector.removeprefix("llm:")
-        return LLMDetector(load_prompt(prompts / "llm.md"), provider, spec.model_id)
-    if spec.detector in ("random_forest", "isolation_forest"):
+    if spec.detector in ("jev", "laya"):
+        typed = context.apply(load_prompt(prompts / "jev.json"), "jev", spec.context, config)
+        return JevDetector(typed) if spec.detector == "jev" else LayaDetector(typed, spec.model_id)
+    provider = spec.detector.removeprefix("llm:")
+    if spec.detector.startswith("llm:") and provider in llm.PROVIDERS:
+        return LLMDetector(context.apply(load_prompt(prompts / "llm.md"), "llm", spec.context, config), provider, spec.model_id)
+    if spec.detector in FORESTS:
         # The one-hot vocabulary comes from the whole pool, never from the Examples, and both forests encode a Flow the same way.
         pool = dataset.load_split(config["dir"] / "pool.csv", config)
         forest = RandomForestDetector if spec.detector == "random_forest" else IsolationForestDetector
@@ -96,14 +110,17 @@ def check_spec(spec: RunSpec, detector_name: str) -> None:
     """Refuse what would waste calls.
 
     k = all exists only for the two forests; the Random Forest cannot train on nothing at k = 0, and the Isolation Forest learns from the
-    benign pool alone, so it runs at k = all only.
+    benign pool alone, so it runs at k = all only. A forest reads the record as numbers in card order, so the labeled record of
+    `record = labeled` is for the Detectors that read a prompt.
     """
-    if None in spec.k_values and detector_name not in ("random_forest", "isolation_forest"):
+    if None in spec.k_values and detector_name not in FORESTS:
         raise ValueError("k = all is only meaningful for the Random Forest and the Isolation Forest")
     if detector_name == "random_forest" and 0 in spec.k_values:
         raise ValueError("the Random Forest starts at k = 1")
     if detector_name == "isolation_forest" and spec.k_values != (None,):
         raise ValueError("the Isolation Forest runs at k = all only")
+    if spec.context.record == "labeled" and detector_name in FORESTS:
+        raise ValueError("record = labeled is for the detectors that read a prompt; a forest reads the record as numbers in card order")
 
 
 def sample_examples(train: Sequence[Flow], k: int, seed: int, categories: Sequence[str]) -> list[Flow]:
@@ -125,18 +142,36 @@ def sample_examples(train: Sequence[Flow], k: int, seed: int, categories: Sequen
     return chosen
 
 
+def cell_examples(train: Sequence[Flow], k: int | None, seed: int, spec: ContextSpec, config: Config) -> list[Flow]:
+    """The Examples of one cell, drawn and then labeled as the context asks; k = None is the whole pool.
+
+    The draw is `sample_examples` and is the paper's, whatever the context: the same Flows in the same order for every Detector and every
+    context level, so a context that mislabels them changes the label alone.
+    """
+    drawn = list(train) if k is None else sample_examples(train, k, seed, config["categories"])
+    return context.mislabel(drawn, spec, seed, config)
+
+
 def execute(spec: RunSpec, detector: Detector, config: Config, flows: Sequence[Flow], train: Sequence[Flow]) -> Path:
     """Run `detector` over `flows` with Examples drawn from `train`; the run directory.
 
     `config.json` is written first, with what is needed to trace the run to its exact inputs: the resolved spec, the card's name and hash,
     the prompt hash. Then each (k, seed, rep) cell judges every Flow of the split, one call and one row each, and closes with a progress
     line counting the Flows judged and the rows that came back with an error.
+
+    The context of the spec is applied here and nowhere else in the loop: the Flows under test are rewritten once, before the first cell,
+    because the rewriting depends on the spec alone, and each cell's Examples are relabeled and rewritten as they are drawn. Only
+    `attributes_csv` and an Example's label ever change; the truth of a Flow is read from the Flow the split gave, so a row's
+    `is_attack`, `category_true` and `novel_attack` are the dataset's whatever the Detector was shown.
     """
     check_spec(spec, detector.name)
-    # `<UTC timestamp>-<dataset>-<detector>-<split>` names the directory under results/; the timestamp keeps its microseconds so that runs
-    # launched together (one k each, in parallel) never share a directory, and the colon of `llm:openai` is not a path character.
+    # `<UTC timestamp>-<dataset>-<detector>-<split>` names the directory under results/, with the context's slug appended when the run
+    # leaves the baseline; the timestamp keeps its microseconds so that runs launched together (one k each, in parallel) never share a
+    # directory, and the colon of `llm:openai` is not a path character.
     started = datetime.now(UTC)
-    run_id = f"{started:%Y%m%dT%H%M%S.%fZ}-{spec.dataset.parent.name}-{spec.detector.replace(':', '-')}-{spec.split}"
+    name = context.slug(spec.context)
+    tail = "" if spec.context == BASELINE else f"-{name[:60]}"
+    run_id = f"{started:%Y%m%dT%H%M%S.%fZ}-{spec.dataset.parent.name}-{spec.detector.replace(':', '-')}-{spec.split}{tail}"
     run_dir = spec.results_dir / run_id
     # The commit the code was at, with `-dirty` when the working tree had uncommitted changes, so a run can be traced to its exact code;
     # the split file is hashed for the same reason, because the card's hash does not cover the Flows that were judged.
@@ -148,6 +183,7 @@ def execute(spec: RunSpec, detector: Detector, config: Config, flows: Sequence[F
         {
             "run_id": run_id,
             "spec": asdict(spec),
+            "context": name,
             "detector": detector.name,
             "model": detector.model,
             "dataset": {"name": config["name"], "sha256": config["sha256"]},
@@ -165,18 +201,22 @@ def execute(spec: RunSpec, detector: Detector, config: Config, flows: Sequence[F
         "model": detector.model,
         "split": spec.split,
         "prompt_hash": detector.prompt_hash,
+        "context": name,
     }
+    rewrite = context.rewriter(spec.context, config, context.load_extras(config))
+    judged = [rewrite.apply(flow, under_test=True) for flow in flows]
     for k, seed in itertools.product(spec.k_values, spec.seeds):
         # Drawn once per (k, seed) and reused by every rep, so the Random Forest keeps its fit across the repetitions. k = None is
         # the whole pool.
-        examples = list(train) if k is None else sample_examples(train, k, seed, config["categories"])
+        examples = cell_examples(train, k, seed, spec.context, config)
+        shown = [rewrite.apply(example, under_test=False) for example in examples]
         for repetition in range(spec.reps):
             judge(
                 run_dir,
                 detector,
-                flows,
-                examples,
-                {**run_fields, "k": k, "seed": seed, "repetition": repetition, "n_examples": len(examples)},
+                judged,
+                shown,
+                {**run_fields, "k": k, "seed": seed, "repetition": repetition, "n_examples": len(shown)},
             )
     print(f"done: {run_dir}")
     return run_dir
@@ -221,6 +261,8 @@ def redo_errors(run_dir: Path) -> Path:
         reps=fields["reps"],
         model_id=fields["model_id"],
         results_dir=Path(fields["results_dir"]),
+        # `asdict` flattened the ContextSpec into a dict of levels; a run made before this fork has none and is a baseline run.
+        context=ContextSpec(**fields.get("context", {})),
     )
     config = dataset.load_config(spec.dataset)
     flows = dataset.load_split(config["dir"] / "splits" / f"{spec.split}.csv", config)
@@ -234,18 +276,21 @@ def redo_errors(run_dir: Path) -> Path:
     run_fields = {key: stored[key] for key in ("run_id", "detector", "model", "prompt_hash")} | {
         "dataset": config["name"],
         "split": spec.split,
+        "context": context.slug(spec.context),
     }
+    rewrite = context.rewriter(spec.context, config, context.load_extras(config))
     # A Flow is done when its cell holds a kept row for it; everything else in the cell (an error row or no row at all) is judged now.
     done = {(row["k"], row["seed"], row["repetition"], row["row_id"]) for row in kept}
     judged = 0
     # Every cell of the spec, in the order `execute` walks them; `sample_examples` is deterministic, so the draw is the original one.
     for k, seed, repetition in itertools.product(spec.k_values, spec.seeds, range(spec.reps)):
-        examples = list(train) if k is None else sample_examples(train, k, seed, config["categories"])
-        cell = {**run_fields, "k": k, "seed": seed, "repetition": repetition, "n_examples": len(examples)}
-        todo = [flow for flow in flows if (k, seed, repetition, flow.row_id) not in done]
+        examples = cell_examples(train, k, seed, spec.context, config)
+        shown = [rewrite.apply(example, under_test=False) for example in examples]
+        cell = {**run_fields, "k": k, "seed": seed, "repetition": repetition, "n_examples": len(shown)}
+        todo = [rewrite.apply(flow, under_test=True) for flow in flows if (k, seed, repetition, flow.row_id) not in done]
         judged += len(todo)
         if todo:
-            judge(run_dir, detector, todo, examples, cell)
+            judge(run_dir, detector, todo, shown, cell)
     errors = len(rows) - len(kept)
     redone = {"at": datetime.now(UTC).isoformat(timespec="seconds"), "error_rows": errors, "missing_flows": judged - errors}
     stored["redone"] = [*stored.get("redone", []), redone]

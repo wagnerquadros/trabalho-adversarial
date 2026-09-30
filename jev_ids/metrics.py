@@ -161,9 +161,13 @@ def none_last_key(values: Sequence[Any]) -> tuple[Any, ...]:
 
 
 def summarize(predictions: Iterable[Prediction]) -> list[dict[str, Any]]:
-    """One row per (dataset, detector, model, split, k), k = all last."""
+    """One row per (dataset, detector, model, split, context, k), k = all last.
+
+    `context` is the slug of the context level the run fixed (`context.py`), `baseline` for a run at the paper's own level, so a sweep
+    over the context space summarizes into one row per level and detector.
+    """
     prices: dict[str, Any] = json.loads(PRICES_PATH.read_text("utf-8"))["models"]
-    fields = ("dataset", "detector", "model", "split", "k")
+    fields = ("dataset", "detector", "model", "split", "context", "k")
     groups = group_by_fields(predictions, fields)
     return [{**dict(zip(fields, key, strict=True)), **summary(groups[key], prices)} for key in sorted(groups, key=none_last_key)]
 

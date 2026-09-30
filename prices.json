@@ -23,6 +23,20 @@
       "source": "https://api-docs.deepseek.com/quick_start/pricing/",
       "note": "Peak list prices; off-peak is half (peak: 01:00-04:00 and 06:00-10:00 UTC, Mon-Fri)."
     },
+    "deepseek-v4-flash": {
+      "input": 0.3,
+      "cached_input": 0.006,
+      "output": 1.2,
+      "source": "https://api-docs.deepseek.com/quick_start/pricing",
+      "note": "Legacy id that DeepSeek routes to deepseek-flash (DeepSeek-V4.1-Flash), read 2026-09-29; peak list prices, off-peak is half."
+    },
+    "deepseek-v4-pro": {
+      "input": 1.32,
+      "cached_input": 0.044,
+      "output": 3.96,
+      "source": "https://api-docs.deepseek.com/quick_start/pricing",
+      "note": "DeepSeek-V4-Pro-0813, read 2026-09-29; peak list prices (01:00-04:00 and 06:00-10:00 UTC, Mon-Fri), off-peak is half."
+    },
     "gpt-5.6-luna": {
       "input": 0.2,
       "cached_input": 0.02,
