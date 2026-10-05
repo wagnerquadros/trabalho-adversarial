@@ -230,7 +230,7 @@ O atacante consome tentativas e trabalho de reformulação. O defensor consome a
 
 ### Onde começa a corrida armamentista?
 
-Na transição R1–R2–R3: o defensor responde à nota e o atacante reage à resposta. Esse é o padrão da corrida armamentista reativa, em que atacante e projetista adaptam o comportamento em resposta ao oponente ([Biggio e Roli, 2018, seção 2](https://doi.org/10.1016/j.patcog.2018.07.023); Aula 5 da disciplina). O ciclo pode parar se uma defesa permanecer eficaz ou se o orçamento se esgotar. O `agent.py` da base, que utiliza F1 como retorno de busca, representa uma condição com oráculo e não deve ser confundido com o atacante caixa-preta proposto.
+Na transição R1–R2–R3: o defensor responde à nota e o atacante reage à resposta. Esse é o padrão da corrida armamentista reativa, em que atacante e projetista adaptam o comportamento em resposta ao oponente ([Biggio e Roli, 2018, seção 2](https://doi.org/10.1016/j.patcog.2018.07.023); Aula 5 da disciplina). O ciclo pode parar se uma defesa permanecer eficaz ou se o orçamento se esgotar. A análise de sensibilidade da seção 3.2 detalha esse limite: a corrida só continua enquanto as hipóteses H1 a H4 forem verdadeiras ao mesmo tempo. Se o reforço não neutralizar a nota (H3 falsa), o jogo para em N/B, a favor do atacante; se reforçar sem necessidade não custar nada (H4 falsa), para em S/R, a favor do defensor. O `agent.py` da base, que utiliza F1 como retorno de busca, representa uma condição com oráculo e não deve ser confundido com o atacante caixa-preta proposto.
 
 ## 3.4 Ameaças e riscos
 
