@@ -40,13 +40,13 @@ O acesso ao Jev ocorre por API, com cobrança por consumo de tokens de entrada. 
 Essa escolha permite utilizar os recursos computacionais disponíveis ao grupo, sem cobrança de um provedor por cada inferência local. Permanecem os custos de processamento, memória e energia. O Jev IDS continuará sendo a referência do trabalho, enquanto as decisões analisadas serão produzidas pelo Qwen e pelo Laya, modelos distintos do Jev.
 
 
-O estudo utiliza o NSL-KDD, um conjunto de dados com registros de conexões descritos por 41 atributos, como protocolo, serviço, duração e quantidade de bytes. A categoria verdadeira de cada registro avaliado fica reservada à verificação dos resultados e não é apresentada ao detector.
+O estudo utiliza o NSL-KDD, um conjunto de dados com registros de conexões descritos por 41 atributos, como protocolo, serviço, duração e quantidade de bytes. Ele foi derivado do KDD'99 com a remoção de registros duplicados ([Tavallaee et al., 2009](https://doi.org/10.1109/CISDA.2009.5356528); [CIC/UNB](https://www.unb.ca/cic/datasets/nsl.html)). A categoria verdadeira de cada registro avaliado fica reservada à verificação dos resultados e não é apresentada ao detector.
 
 ### O que significa alterar o contexto
 
 Contexto é a informação que orienta a interpretação do registro, incluindo instruções, descrições dos atributos e das categorias, exemplos de referência e a apresentação dos dados. Alterar essas informações pode mudar a decisão do Jev sem retreinar o modelo.
 
-Neste trabalho, serão exploradas duas alterações: o atacante poderá inserir uma nota enganosa no campo `service`, enquanto o defensor poderá revisar as instruções da tarefa. Os demais elementos permanecerão fixos. O risco investigado é que uma mensagem inserida como dado seja interpretada pelo detector como uma orientação confiável.
+Neste trabalho, serão exploradas duas alterações: o atacante poderá inserir uma nota enganosa no campo `service`, enquanto o defensor poderá revisar as instruções da tarefa. Os demais elementos permanecerão fixos. O risco investigado é que uma mensagem inserida como dado seja interpretada pelo detector como uma orientação confiável. Esse risco é conhecido como injeção indireta de prompt: conteúdo externo, ao ser lido pelo modelo, altera seu comportamento de forma não pretendida ([OWASP, 2025](https://genai.owasp.org/llmrisk/llm01-prompt-injection/); [Greshake et al., 2023](https://doi.org/10.48550/arXiv.2302.12173)).
 
 A interação ocorrerá em uma simulação com registros do dataset, sem envio de ataques a uma rede real. O atacante receberá apenas o veredito de suas próprias tentativas; o defensor receberá os resultados autorizados da avaliação para orientar suas revisões. A análise buscará compreender como essas escolhas afetam a detecção de ataques e os falsos alarmes sobre registros legítimos.
 
@@ -73,8 +73,8 @@ AT1: integridade da classificação e detecção de ataques; AT2: integridade do
 
 ### Pressupostos
 
-- **S1 — Separação entre dados e instruções:** valores do registro são dados, sem autoridade para modificar a tarefa. Falha quando uma nota em `service` é seguida como instrução.
-- **S2 — Integridade dos exemplos:** os rótulos de referência são corretos. Falha quando um insider ou origem comprometida os adultera.
+- **S1 — Separação entre dados e instruções:** valores do registro são dados, sem autoridade para modificar a tarefa. Falha quando uma nota em `service` é seguida como instrução. Modelos generativos combinam os canais de dados e de instrução, o que torna essa falha possível ([NIST AI 100-2 E2025, seção 3.4](https://doi.org/10.6028/NIST.AI.100-2e2025)).
+- **S2 — Integridade dos exemplos:** os rótulos de referência são corretos. Falha quando um insider ou origem comprometida os adultera, o que corresponde ao envenenamento por troca de rótulos, ou _label flipping_ ([NIST AI 100-2 E2025, seção 2.3](https://doi.org/10.6028/NIST.AI.100-2e2025)).
 - **S3 — Integridade das instruções:** as orientações carregadas têm origem autorizada e permanecem íntegras. Falha quando alguém com acesso à configuração insere instruções enganosas.
 - **S4 — Confiabilidade do resultado:** classificar como normal pressupõe uma resposta válida. Falha quando ausência de resposta é contabilizada como normal. Na base inspecionada, ausência de `p_attack` produz veredito `None`, considerado normal na avaliação.
 
@@ -116,7 +116,7 @@ Essas preferências dependem das hipóteses de eficácia e custo. Uma revisão d
 
 ### Melhores respostas e equilíbrio
 
-Contra B, o atacante prefere N (3 > 1); contra R, prefere S (1 > 0). Contra N, o defensor prefere R (2 > 0); contra S, prefere B (3 > 1). Portanto, nenhum jogador tem estratégia dominante e nenhuma célula constitui equilíbrio de Nash em estratégias puras.
+Contra B, o atacante prefere N (3 > 1); contra R, prefere S (1 > 0). Contra N, o defensor prefere R (2 > 0); contra S, prefere B (3 > 1). Portanto, nenhum jogador tem estratégia dominante e nenhuma célula constitui equilíbrio de Nash em estratégias puras, isto é, não há célula na qual nenhum jogador melhore mudando sozinho (Aula 4 da disciplina, conforme `fontes/referencias.md`).
 
 O ciclo de melhores respostas é N/B → N/R → S/R → S/B → N/B. O jogo finito admite equilíbrio misto sob uma representação apropriada de utilidades, mas não calculamos suas probabilidades: uma escala somente ordinal não justifica usar suas distâncias como utilidades cardinais. O cálculo misto é um aprofundamento opcional.
 
@@ -157,7 +157,7 @@ O atacante consome tentativas e trabalho de reformulação. O defensor consome a
 
 ### Onde começa a corrida armamentista?
 
-Na transição R1–R2–R3: o defensor responde à nota e o atacante reage à resposta. O ciclo pode parar se uma defesa permanecer eficaz ou se o orçamento se esgotar. O `agent.py` da base, que utiliza F1 como retorno de busca, representa uma condição com oráculo e não deve ser confundido com o atacante caixa-preta proposto.
+Na transição R1–R2–R3: o defensor responde à nota e o atacante reage à resposta. Esse é o padrão da corrida armamentista reativa, em que atacante e projetista adaptam o comportamento em resposta ao oponente ([Biggio e Roli, 2018, seção 2](https://doi.org/10.1016/j.patcog.2018.07.023); Aula 5 da disciplina). O ciclo pode parar se uma defesa permanecer eficaz ou se o orçamento se esgotar. O `agent.py` da base, que utiliza F1 como retorno de busca, representa uma condição com oráculo e não deve ser confundido com o atacante caixa-preta proposto.
 
 ## 3.4 Ameaças e riscos
 
@@ -187,7 +187,7 @@ Os pontos e cenários abaixo se relacionam aos pressupostos S1–S4 da seção 3
 | P3 | Instruções em `prompts/nsl-kdd/jev.json` e níveis de `context.json`; `instructions_text` | Alteração das orientações para favorecer a categoria normal; `instructions=misleading` simula instruções enganosas. | Escrita na configuração ou comprometimento de sua origem. | S3 |
 | P4 | `jev_ids/records.py`, `complete_prediction`; política de avaliação de falhas | Sem `p_attack`, o veredito registrado é `None`; a política de métricas considera a falha como normal, conforme documentação da função. | Falha do processamento; provocar a falha intencionalmente exige capacidade adicional ainda não demonstrada. | S4 |
 
-Os níveis do código permitem simular adulterações, mas sua existência não prova que um adversário real tenha acesso aos componentes ou que o ataque funcione. P4 não é, por si só, uma vulnerabilidade do limiar 0,5: o problema é o tratamento da ausência de resposta.
+P1 corresponde à injeção indireta de prompt ([OWASP, 2025](https://genai.owasp.org/llmrisk/llm01-prompt-injection/); [NIST AI 100-2 E2025, seção 3.4](https://doi.org/10.6028/NIST.AI.100-2e2025)), e P2 ao envenenamento por troca de rótulos ([NIST AI 100-2 E2025, seção 2.3](https://doi.org/10.6028/NIST.AI.100-2e2025)). Os níveis do código permitem simular adulterações, mas sua existência não prova que um adversário real tenha acesso aos componentes ou que o ataque funcione. P4 não é, por si só, uma vulnerabilidade do limiar 0,5: o problema é o tratamento da ausência de resposta.
 
 ### Diagrama de superfície de ataque
 
@@ -256,16 +256,22 @@ A revisão das instruções atua antes da montagem da entrada do detector. A ava
 
 O Jev IDS fornece a base de detectores, contextos, registros e métricas. O grupo propõe a separação de observações e o ciclo entre atacante caixa-preta e defensor adaptativo. A inspeção do código não equivale à validação experimental das ameaças.
 
-Referências fornecidas no material do grupo:
+Referências citadas no relatório. A lista completa, com o que cada fonte sustenta e onde é citada, está em [`fontes/referencias.md`](fontes/referencias.md).
 
 - Projeto Jev IDS: https://github.com/Tucelos/Jev-ids-adversarial (branch Developer; registrar o commit efetivamente utilizado antes da entrega).
 - Documentação Jev: https://docs.typesafe.ai/introduction.
 - Modelo Qwen3-8B: https://huggingface.co/Qwen/Qwen3-8B.
 - Ollama: https://docs.ollama.com/.
 - Laya: https://huggingface.co/convaiinnovations/laya.
+- TAVALLAEE, M.; BAGHERI, E.; LU, W.; GHORBANI, A. A. A detailed analysis of the KDD CUP 99 data set. IEEE CISDA, 2009. https://doi.org/10.1109/CISDA.2009.5356528.
+- Canadian Institute for Cybersecurity (UNB). NSL-KDD dataset. https://www.unb.ca/cic/datasets/nsl.html.
+- OWASP Foundation. LLM01:2025 Prompt Injection. https://genai.owasp.org/llmrisk/llm01-prompt-injection/.
+- GRESHAKE, K. et al. Not what you've signed up for: Compromising Real-World LLM-Integrated Applications with Indirect Prompt Injection. arXiv:2302.12173, 2023. https://doi.org/10.48550/arXiv.2302.12173.
+- VASSILEV, A. et al. Adversarial Machine Learning: A Taxonomy and Terminology of Attacks and Mitigations. NIST AI 100-2 E2025, 2025. https://doi.org/10.6028/NIST.AI.100-2e2025.
+- NASH, J. Non-Cooperative Games. Annals of Mathematics, v. 54, n. 2, p. 286-295, 1951. https://doi.org/10.2307/1969529.
+- BIGGIO, B.; ROLI, F. Wild patterns: Ten years after the rise of adversarial machine learning. Pattern Recognition, v. 84, p. 317-331, 2018. https://doi.org/10.1016/j.patcog.2018.07.023.
+- Disciplina AL2268 Engenharia de Software Adversarial, Unipampa, 2026/2: transcrições das Aulas 4 e 5.
 - Instruções de entrega encaminhadas pelo professor: modelo estático, dinâmico, ameaças e riscos; relatório Markdown, PDF dos slides e vídeo no YouTube.
-
-A referência original do NSL-KDD e os materiais específicos da disciplina devem ser acrescentados pelo responsável pelas fontes. Os links acima foram preservados do material enviado, sem nova validação externa nesta edição.
 
 **Declaração desta edição:** houve apoio de IA na redação dos pressupostos, modelagem ilustrativa, cenários e organização do relatório. Os mecanismos de contexto e registro foram inspecionados no código fornecido. Os payoffs, rodadas e notas de risco são propostas para revisão do grupo, não resultados de experimentos. Cada integrante deve registrar seu próprio uso de IA e sua verificação.
 
