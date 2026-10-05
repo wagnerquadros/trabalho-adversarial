@@ -124,40 +124,92 @@ A ausência de equilíbrio puro motiva examinar adaptações sucessivas. Ela nã
 
 ## 3.3 Modelo estratégico dinâmico
 
+A matriz da seção anterior descreve uma decisão isolada. Nesta seção a mesma disputa é observada ao longo do tempo, porque **o veredito é informação para os dois lados**: o atacante o recebe sobre as próprias tentativas, e o defensor o recebe agregado pelo avaliador. Cada rodada segue o ciclo `ação → resposta → observação → adaptação`, e a observação de uma rodada é o que causa a adaptação da seguinte.
+
+A sequência percorre o ciclo de melhores respostas identificado na seção 3.2 — `N/B → N/R → S/R → S/B` — e mostra o que a matriz 2×2 não consegue mostrar: as quatro células permanecem, mas **o conteúdo de cada uma muda a cada volta**.
+
 ### Rodadas propostas
 
 As rodadas abaixo são um cenário de planejamento, não um histórico de execuções. Uma transição ocorre somente se as observações previstas aparecerem. Cada modelo deve ser avaliado separadamente.
 
 | Rodada | Ação do atacante | Resposta do defensor | Observação autorizada | Adaptação seguinte |
 |---|---|---|---|---|
-| R1 — N/B | Envia registro malicioso com nota. | Mantém instruções básicas. | Atacante recebe o próprio veredito; avaliador pode informar ao defensor uma evasão e a nota correspondente. | Se houver evasão atribuível à nota, o defensor passa a R. |
-| R2 — N/R | Mantém inicialmente a nota para sondar o novo comportamento. | Usa instruções reforçadas. | Atacante observa alerta, se a defesa funcionar; defensor acompanha detecção, falhas e falsos alarmes em registros legítimos. | Se a nota perder utilidade, o atacante a retira, passando a S. |
-| R3 — S/R | Submete ataque sem nota. | Mantém o reforço enquanto avalia seus custos. | Atacante recebe somente o veredito próprio; defensor compara custos e decisões autorizadas com a condição básica. | Se o reforço não trouxer benefício e tiver custo relevante, o defensor volta a B. |
-| R4 — S/B | Mantém inicialmente o ataque sem nota. | Retorna às instruções básicas. | Atacante não vê as instruções; mudanças nos vereditos podem motivar nova sondagem. | O atacante pode testar novamente N, reiniciando o ciclo. |
+| **R1 — N/B** | Submete o registro malicioso com uma nota em `service` que alega manutenção autorizada e pede a classificação normal. | Mantém as instruções básicas. | **Atacante:** os registros com nota recebem "sem alerta". **Defensor:** o avaliador reporta evasões no conjunto de desenvolvimento e as notas correspondentes. | O defensor passa a **R**: instruções que declaram que valores do registro, inclusive `service`, são dados não confiáveis e não alteram a tarefa. |
+| **R2 — N/R** | Mantém a mesma nota, para sondar o novo comportamento. | Aplica as instruções reforçadas. | **Atacante:** a nota que passava agora recebe alerta. Ele percebe *que* algo mudou, não *o quê*. **Defensor:** a evasão por nota cai, mas sobem os falsos alarmes sobre registros legítimos cujo `service` é raro — o reforço ensina o detector a desconfiar do campo, e não apenas da nota. | **Atacante:** a nota virou passivo; retira-a, passando a **S**. **Defensor:** passa a contabilizar o custo de **R** em falso alarme. |
+| **R3 — S/R** | Submete o ataque sem nota. Em paralelo, gasta parte do orçamento sondando variantes da nota, para descobrir qual parte dela era punida. | Mantém **R** enquanto mede seu custo. | **Atacante:** sem a nota volta a passar na taxa de base do detector, o que indica que o punido era a nota. **Defensor:** **R** não traz ganho contra **S** e segue cobrando falso alarme de quem não participa da disputa. Ele também **vê as notas sondadas**, porque notas testadas estão entre suas observações autorizadas. | **Defensor:** volta a **B**, decisão correta pelo custo medido e arriscada diante da sondagem que ele acabou de observar. **Atacante:** conclui a sondagem. |
+| **R4 — S/B** | Mantém o ataque sem nota enquanto encerra a sondagem. | Retorna às instruções básicas. | **Atacante:** registros que recebiam alerta na R3 voltam a passar, sinal de que o regime afrouxou. A sondagem indica que a punição recaía sobre a *alegação de autoridade*, não sobre a presença de texto. **Defensor:** sem a nota, **B** e **R** se equivalem em detecção, e **B** custa menos. | O atacante volta a **N**, com uma nota de outra natureza: sem ordem e sem alegação de autoridade, apenas um qualificador de serviço plausível dentro do vocabulário do dataset. |
+
+### Por que o ciclo não retorna ao ponto de partida
+
+A R4 devolve o par de ações ao estado da R1, mas **o estado da disputa é outro**, por três razões:
+
+1. **A nota mudou de natureza.** A nota da R1 tentava *alterar a tarefa*; a nota que abre a volta seguinte tenta *alterar a evidência*. O reforço **R**, redigido para negar autoridade a valores do registro, não cobre uma nota que não dá ordem alguma. A defesa que funcionou continua disponível e deixou de ser suficiente.
+2. **O defensor passou a conhecer o preço de R.** Na R1 ele podia adotar o reforço sem saber quanto custava; depois da R2 e da R3 ele sabe que custa falso alarme sobre `service` raro. A mesma ação, com o mesmo rótulo, deixou de ser barata.
+3. **O orçamento do atacante diminuiu.** As tentativas de sondagem da R3 e da R4 não voltam, e cada uma delas revelou ao defensor uma nota testada.
+
+Em outras palavras: os rótulos das células se repetem, mas o conteúdo de cada uma é diferente a cada volta. É esse deslocamento, e não o ciclo em si, que caracteriza a adaptação.
+
+### O que cada rodada demonstra
+
+- **A resposta também produz informação.** Nas R1 e R2 o atacante nunca vê `p_attack` nem as instruções; ele infere pelo efeito. O "sem alerta" da R1 e o alerta da R2 são, cada um, uma consulta barata ao detector.
+- **Mesmo objetivo, ação diferente.** O objetivo é o mesmo nas quatro rodadas — fazer um registro malicioso receber o veredito sem alerta. O que muda é a nota.
+- **O defensor também observa e adapta.** Nas R1, R2 e R3 quem muda é ele, e sempre a partir de uma observação agregada do avaliador, não de um registro isolado.
+- **Decisões passadas alteram as possibilidades.** Pelas três razões da subseção anterior: a nota muda de natureza, o custo de **R** deixa de ser desconhecido e o orçamento encolhe.
+- **A defesa cobra de quem não está na disputa.** Nas R2 e R3 o reforço aumenta o falso alarme sobre registros legítimos de serviço raro. Esse custo recai sobre o ativo **AT4** e sobre usuários que não participam da interação, e na R3 ele é pago sem benefício, porque o atacante já havia retirado a nota.
 
 ### Diagrama do ciclo adaptativo
 
 ![Ciclo adaptativo](diagramas/ciclo-adaptativo.png)
 
+Fonte editável: [quadro no Figma](https://www.figma.com/design/pioW9qAOO7tnPXLljz2aNk?node-id=52-2), de onde o PNG é exportado. O arquivo `diagramas/ciclo-adaptativo.mmd` traz o mesmo ciclo em Mermaid, para quem preferir editar em texto.
+
+O ramo no fim do ciclo é o que liga uma rodada à seguinte: **quem adapta depende de quem errou**. Se o ataque recebeu alerta, quem muda é o atacante; se o ataque passou, quem muda é o defensor. Os dois leem o mesmo veredito, em granularidades diferentes, e tiram dele conclusões opostas.
+
+### Evidência preliminar e seus limites
+
+As rodadas acima são um cenário de planejamento. Existem, porém, medições anteriores sobre a base do Jev IDS que indicam a **ordem de grandeza e a direção** de duas das alterações de contexto descritas. Elas foram produzidas em um estudo paralelo, **não são o experimento deste trabalho** e **não usaram Qwen nem Laya**: o detector foi o Nimble 9B, de pesos abertos, sobre o NSL-KDD no recorte `pilot` de 300 registros, com três sementes.
+
+| Alteração medida | F1 | Relação com esta seção |
+|---|---|---|
+| Contexto de referência | 0,673 | linha de base da comparação |
+| Texto injetado no campo do registro | 0,250 | **mesmo mecanismo da ação N** e do ponto P1 da seção 3.4: a nota anexada ao valor de `service`. McNemar p < 0,001. |
+| Descrição das colunas enriquecida | 0,765 | **não é a ação R.** É outro fator de contexto, e serve apenas para mostrar que uma revisão de contexto pode mover o F1 em cerca de +0,09. McNemar p < 0,001. |
+
+A primeira linha de ataque é a relevante: ela sustenta que o mecanismo da ação **N** pode derrubar a detecção de forma expressiva, e não que isso ocorrerá no Qwen ou no Laya com esta nota específica. Um modelo diferente pode reagir de outra maneira, e a medição do comportamento de cada um continua pendente.
+
+Para o custo em falso alarme discutido nas R2 e R3 não há medição, mas há uma âncora da base: com o limiar em 0,5, a execução de referência do Jev produziu **43 falsos alarmes em 874 registros benignos**. É contra esse patamar que o custo do reforço precisa ser comparado quando for medido.
+
 ### Quem observa quem?
 
-O atacante observa apenas os vereditos de suas tentativas, sem acesso a F1, gabarito ou instruções. O defensor recebe notas testadas e resultados autorizados do avaliador, que mantém os rótulos separados. Resultados de desenvolvimento podem orientar adaptação; o conjunto final reservado não pode ser utilizado para isso.
+Os dois observam o mesmo veredito, em granularidades diferentes. O atacante observa **uma tentativa por vez**, com detalhe fino e resposta imediata; ele não tem acesso a F1, gabarito ou instruções. O defensor observa a **distribuição** — evasões, falsos alarmes, falhas e custo — com atraso, porque precisa de várias amostras para separar sinal de ruído, e somente sobre o conjunto de desenvolvimento: o conjunto final reservado não pode orientar adaptação.
+
+A assimetria não é total. O defensor também recebe **as notas testadas**, de modo que a sondagem do atacante não é invisível, apenas chega depois. Isso favorece o atacante no curto prazo e o defensor no longo.
 
 ### O que cada lado consegue mudar?
 
-O atacante mantém, retira ou reformula a nota em `service`. O defensor mantém ou revisa as instruções. Os demais atributos, exemplos, modelo e limiar ficam fixos na sequência.
+O atacante muda apenas **a nota em `service`**: mantém, retira ou reformula, dentro de limites de tentativas e de tamanho. O defensor muda apenas **as instruções apresentadas ao detector**. Os demais atributos do registro, os exemplos, o modelo e o limiar de alerta permanecem fixos na sequência, conforme o recorte da seção 3.1.
+
+Nenhum dos dois consegue mudar o que o outro muda, e nenhum dos dois controla o detector. É por isso que a disputa não se resolve pela ação de um só lado.
 
 ### O que dispara uma adaptação?
 
-Para o atacante, vereditos que indiquem perda ou ganho de eficácia. Para o defensor, evasões confirmadas na avaliação de desenvolvimento, notas suspeitas, falsos alarmes e custos do reforço. Nenhum participante recebe informações que estejam fora de suas capacidades declaradas.
+O mesmo evento, lido dos dois lados: o veredito. Para o atacante, o gatilho é **receber alerta** onde antes passava, ou voltar a passar onde antes recebia alerta. Para o defensor, é **uma evasão confirmada** na avaliação de desenvolvimento, ou o falso alarme ultrapassando o que ele considera aceitável. Os dois gatilhos aparecem na sequência: a evasão da R1 move o defensor, e o alerta da R2 move o atacante.
+
+Nenhum participante recebe informação fora das capacidades declaradas na seção 3.1.
 
 ### Qual é o custo da adaptação?
 
-O atacante consome tentativas e trabalho de reformulação. O defensor consome avaliações, processamento e tempo de revisão; instruções maiores podem aumentar custo e latência, e mudanças podem elevar falsos alarmes. Esses efeitos são hipóteses que precisam ser medidos. Decisões anteriores consomem orçamento e condicionam as opções seguintes.
+Para o atacante, cada tentativa consome orçamento e **revela ao defensor a nota testada**; reformular a nota também custa trabalho. Para o defensor, instruções mais longas aumentam o texto de entrada, o processamento e a latência; além disso, validar uma revisão custa uma rodada inteira de avaliação, e o reforço cobra falso alarme sobre registros legítimos. Para o **usuário legítimo**, que não é jogador neste recorte, o custo é pago sem participação, nas R2 e R3.
+
+Esses efeitos são hipóteses de planejamento e precisam ser medidos. Decisões anteriores consomem orçamento e condicionam as opções seguintes.
 
 ### Onde começa a corrida armamentista?
 
-Na transição R1–R2–R3: o defensor responde à nota e o atacante reage à resposta. O ciclo pode parar se uma defesa permanecer eficaz ou se o orçamento se esgotar. O `agent.py` da base, que utiliza F1 como retorno de busca, representa uma condição com oráculo e não deve ser confundido com o atacante caixa-preta proposto.
+Não na R1–R2, que é apenas uma ação e sua resposta. Ela começa **na volta ao N**, ao fim da R4, quando o atacante retorna com uma nota de um tipo que a defesa existente não descreve. A partir daí, cada reformulação exige do defensor uma instrução mais específica, e cada instrução mais específica cobra mais falso alarme sobre registros legítimos.
+
+A corrida não é limitada pela técnica, e sim por dois orçamentos: o de alarme falso que a operação tolera e o de tentativas que o atacante pode gastar. Ela não termina com um vencedor; estabiliza quando o custo marginal de mais uma adaptação supera o ganho de cada lado. Por isso nenhuma das defesas desta sequência é definitiva — cada uma apenas desloca a disputa para outra forma de nota.
+
+Como Qwen e Laya são modelos distintos, a corrida pode ter formatos diferentes em cada um, e os dois devem ser acompanhados separadamente. O `agent.py` da base, que utiliza F1 como retorno de busca, representa uma condição com oráculo e não deve ser confundido com o atacante caixa-preta proposto aqui.
 
 ## 3.4 Ameaças e riscos
 
@@ -250,6 +302,12 @@ A inspeção dos arquivos do ZIP `Jev-ids-adversarial-Developer (1).zip` confirm
 | Orquestrador | Proposto pelo grupo. | Configuração e agentes → sequência de rodadas e observações separadas. |
 | Avaliador e log | Métricas e registros existem na base; separação por agente e rodada é proposta. | Predições e gabarito reservado → métricas, custos e log. |
 
+![Arquitetura planejada](diagramas/arquitetura-planejada.png)
+
+Fonte editável: [quadro no Figma](https://www.figma.com/design/pioW9qAOO7tnPXLljz2aNk?node-id=47-2).
+
+O diagrama mostra os cinco componentes da tabela em operação e deixa explícito o que **não** muda no recorte: os demais atributos do registro, os exemplos rotulados, o modelo detector e o limiar de alerta. A primeira rodada não passa pela decisão, porque ainda não existe veredito anterior para dizer quem errou.
+
 A revisão das instruções atua antes da montagem da entrada do detector. A avaliação acompanha taxa de evasão nos registros maliciosos, F1, recall, falsos alarmes sobre registros legítimos, falhas e custo/latência. Falhas devem ser reportadas separadamente de classificações válidas. O futuro enunciado do Trabalho 2 poderá exigir ajustes nesta arquitetura.
 
 ## 5. Origem, referências e uso de IA
@@ -267,7 +325,7 @@ Referências fornecidas no material do grupo:
 
 A referência original do NSL-KDD e os materiais específicos da disciplina devem ser acrescentados pelo responsável pelas fontes. Os links acima foram preservados do material enviado, sem nova validação externa nesta edição.
 
-**Declaração desta edição:** houve apoio de IA na redação dos pressupostos, modelagem ilustrativa, cenários e organização do relatório. Os mecanismos de contexto e registro foram inspecionados no código fornecido. Os payoffs, rodadas e notas de risco são propostas para revisão do grupo, não resultados de experimentos. Cada integrante deve registrar seu próprio uso de IA e sua verificação.
+**Declaração desta edição:** houve apoio de IA na redação dos pressupostos, modelagem ilustrativa, cenários e organização do relatório. Os mecanismos de contexto e registro foram inspecionados no código fornecido. Os payoffs, rodadas e notas de risco são propostas para revisão do grupo, não resultados de experimentos deste trabalho. A exceção está na seção 3.3, que cita medições preliminares de um estudo paralelo sobre a base do Jev IDS, feitas com um terceiro detector (Nimble 9B) e identificadas como tais no texto; elas indicam ordem de grandeza e direção, e não substituem a avaliação de Qwen e Laya, ainda pendente. Cada integrante deve registrar seu próprio uso de IA e sua verificação.
 
 ## 6. Entrega e contribuições
 
@@ -281,7 +339,7 @@ A referência original do NSL-KDD e os materiais específicos da disciplina deve
 |---|---|---|
 | Wagner | Sistema, contexto e integração. | Acrescentar commits/PRs e trecho do vídeo. |
 | Membro 2 | Modelo estático e organização. | Confirmar nome e acrescentar commits/PRs. |
-| Membro 3 | Modelo dinâmico e vídeo. | Confirmar nome e acrescentar commits/PRs. |
+| Tuigg | Modelo dinâmico e vídeo. | Seção 3.3, diagrama do ciclo adaptativo e diagrama da arquitetura planejada. Coordena montagem e publicação do vídeo. |
 | Camilla | Superfície de ataque, cenários e riscos. | Acrescentar PR da branch camilladev e trecho do vídeo. |
 | Membro 5 | Resposta, efeitos colaterais e risco residual. | Confirmar nome e revisar a proposta desta edição. |
 | Pietra | Arquitetura e apresentação. | Acrescentar commits/PRs e links finais. |

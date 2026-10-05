@@ -1,5 +1,41 @@
+%% Ciclo adaptativo - Trabalho 1, secao 3.3
+%% Versao alinhada ao recorte do grupo: acoes N/S (atacante) e B/R (defensor).
+%% O init alarga as caixas; sem ele o diagrama sai estreito e alto demais.
+%% O grafo e aciclico de proposito: o dagre quebra um ciclo desenhado na aresta
+%% errada e renderiza comecando pelo ultimo passo. Por isso a volta e um no final.
+
+%%{init: {'flowchart': {'wrappingWidth': 340, 'nodeSpacing': 55, 'rankSpacing': 55}}}%%
 flowchart TD
- R1["R1: nota + instruções básicas"] -->|"Defensor observa evasão"| R2["R2: nota + instruções reforçadas"]
- R2 -->|"Atacante observa alerta e retira nota"| R3["R3: sem nota + reforço"]
- R3 -->|"Defensor observa custo sem benefício"| R4["R4: sem nota + instruções básicas"]
- R4 -->|"Atacante testa nova nota"| R1
+    A["<b>1 · AÇÃO</b><br/>o atacante escolhe <b>N</b> — registro com nota em <code>service</code><br/>ou <b>S</b> — registro sem nota<br/><i>o objetivo é o mesmo em toda rodada</i>"]
+    R["<b>2 · RESPOSTA</b><br/>o detector (Qwen ou Laya) devolve p_attack e categoria<br/>veredito: alerta se p_attack ≥ 0,5"]
+    OA["<b>3a · OBSERVAÇÃO DO ATACANTE</b><br/>só o veredito das próprias tentativas<br/>sem F1, sem gabarito, sem ver as instruções"]
+    OD["<b>3b · OBSERVAÇÃO DO DEFENSOR</b><br/>resultados autorizados do avaliador:<br/>evasões, falsos alarmes, notas testadas, custo"]
+    D{"<b>4 · ADAPTAÇÃO</b><br/>quem errou?"}
+    AT["<b>O ATACANTE ADAPTA</b><br/>mantém, retira ou reformula a nota<br/><b>N → S</b> ou nota de outra natureza<br/><i>R2 e R4</i>"]
+    DF["<b>O DEFENSOR ADAPTA</b><br/>mantém ou revisa as instruções<br/><b>B → R</b> ou <b>R → B</b><br/><i>R1 e R3</i>"]
+    UL["<b>CUSTO COLATERAL</b><br/>o reforço faz <code>service</code> legítimo raro<br/>virar falso alarme — ativo AT4"]
+    N(["↻ volta ao passo 1 — <b>o par de ações se repete, o estado não</b><br/>nota de outra natureza · custo de R agora conhecido · orçamento menor"])
+
+    A --> R
+    R --> OA
+    R --> OD
+    OA --> D
+    OD --> D
+    D -- "o ataque RECEBEU ALERTA" --> AT
+    D -- "o ataque PASSOU,<br/>ou R custou mais do que rendeu" --> DF
+    DF -.-> UL
+    AT --> N
+    DF --> N
+
+    classDef atacante fill:#FBE9E7,stroke:#D9534F,stroke-width:2px,color:#1A1A1A
+    classDef defensor fill:#D4F0D9,stroke:#6BBF7A,stroke-width:2px,color:#1A1A1A
+    classDef sistema fill:#3B1D4E,stroke:#3B1D4E,stroke-width:2px,color:#FFFFFF
+    classDef neutro fill:#FFFFFF,stroke:#D9D9D9,stroke-width:1.5px,color:#1A1A1A
+    classDef colateral fill:#F4F4F4,stroke:#CCCCCC,stroke-width:1px,color:#5C5C5C
+    classDef volta fill:#EDE7F2,stroke:#3B1D4E,stroke-width:2px,color:#1A1A1A
+
+    class A,AT,OA atacante
+    class DF,OD defensor
+    class R,D sistema
+    class UL colateral
+    class N volta
