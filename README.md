@@ -186,6 +186,15 @@ Três conclusões saem da tabela:
 
 As quatro métricas da tabela usam somente informações que o avaliador já produz (vereditos, gabarito reservado, falhas, tempo e tokens). Por isso podem ser medidas no Trabalho 2 sem dar ao atacante acesso a nada além do veredito.
 
+### O que os números já publicados indicam
+
+O Jev IDS publicou resultados do Jev sobre o NSL-KDD, com 1.126 registros maliciosos e 874 legítimos por semente ([`docs/results.md`](https://github.com/Tucelos/Jev-ids-adversarial/blob/main/docs/results.md), commit `57fa123`). Eles não testam a nota, mas ajudam a calibrar dois payoffs:
+
+- **Atacar sem nota já rende algo ao atacante.** Com um exemplo por categoria (k = 1), o recall sobre todos os ataques é 0,778: cerca de 22% dos registros maliciosos já passam sem alerta, sem nenhuma nota. Isso sustenta A(S, B) = A(S, R) = 1, e não 0.
+- **Mudar o contexto tem custo para os usuários legítimos, o que torna H4 plausível.** Passar de nenhum exemplo (k = 0) para um exemplo (k = 1) elevou o recall de 0,654 para 0,778, mas a precisão caiu de 0,972 para 0,953. Combinando recall, precisão e o total de ataques, os falsos alarmes passam de cerca de 21 para 43 em 874 registros legítimos; o valor 43 coincide com o publicado. O custo da API subiu de US$ 43 para US$ 74 por milhão de registros; a latência ficou estável (310 ms e 315 ms).
+
+**Limites:** os números são do Jev, não do Qwen nem do Laya; a mudança medida foi no número de exemplos, não nas instruções; e nenhuma nota foi testada. Eles tornam as hipóteses plausíveis, mas não substituem as medidas da tabela acima.
+
 ## 3.3 Modelo estratégico dinâmico
 
 ### Rodadas propostas
