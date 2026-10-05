@@ -137,13 +137,7 @@ As rodadas abaixo são um cenário de planejamento, não um histórico de execu�
 
 ### Diagrama do ciclo adaptativo
 
-```mermaid
-flowchart TD
- R1["R1: nota + instruções básicas"] -->|"Defensor observa evasão"| R2["R2: nota + instruções reforçadas"]
- R2 -->|"Atacante observa alerta e retira nota"| R3["R3: sem nota + reforço"]
- R3 -->|"Defensor observa custo sem benefício"| R4["R4: sem nota + instruções básicas"]
- R4 -->|"Atacante testa nova nota"| R1
-```
+![Ciclo adaptativo](diagramas/ciclo-adaptativo.png)
 
 ### Quem observa quem?
 
