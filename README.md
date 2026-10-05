@@ -82,18 +82,7 @@ S2 e S3 fundamentam cenários ampliados com acesso adicional, fora das capacidad
 
 ### Diagrama de contexto
 
-```mermaid
-flowchart TD
- A["Atacante simulado"] -->|"Registro com nota"| O["Coordenador experimental"]
- U["Registros legítimos do dataset"] --> O
- D["Defensor"] -->|"Instruções revisadas"| O
- E["Exemplos fixos"] --> O
- O -->|"Entrada sem gabarito"| Q["Detector: Qwen ou Laya"]
- Q -->|"Resposta"| V["Veredito e avaliação"]
- G["Gabarito reservado"] --> V
- V -->|"Somente veredito próprio"| A
- V -->|"Resultados autorizados"| D
-```
+![Diagrama de contexto](diagramas/contexto.png)
 
 O coordenador, a separação de observações e os agentes adaptativos são componentes propostos para a simulação. O diagrama não representa uma implantação em rede real.
 
