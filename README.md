@@ -104,17 +104,75 @@ Os registros normais representam os interesses dos usuários legítimos, mas est
 
 ### Em que ponto pode surgir uma corrida armamentista?
 
+
 ## 3.4 Ameaças e riscos
+
+### Escopo e ativos
+
+O atacante principal opera em uma simulação: insere notas no campo `service` e observa somente o veredito de suas tentativas. O defensor revisa instruções; exemplos, modelo e limiar permanecem fixos no ciclo principal. A possibilidade de anexar notas e receber vereditos é fornecida pelo ambiente experimental, não presumida para tráfego de uma rede real.
+
+A superfície mais ampla do projeto também inclui exemplos rotulados, arquivos de instruções e tratamento de falhas. Cenários nesses componentes exigem capacidades adicionais, explicitadas abaixo. Não se atribui ao atacante principal acesso a exemplos, instruções, gabarito ou F1.
+
+Ativos: **AT1**, integridade da classificação e detecção de registros maliciosos; **AT2**, integridade de exemplos e instruções; **AT3**, disponibilidade e confiabilidade do processamento; **AT4**, qualidade das decisões sobre registros legítimos.
+
+### Pressupostos e rastreabilidade
+
+Estes identificadores locais devem ser incorporados ou relacionados aos pressupostos finais da seção 3.1:
+
+- **S1:** valores dos registros são dados, não instruções.
+- **S2:** os exemplos usados como referência têm rótulos íntegros.
+- **S3:** as instruções carregadas têm origem autorizada e não foram adulteradas.
+- **S4:** ausência de resposta não pode ser confundida com evidência de tráfego normal.
 
 ### Pontos de exploração
 
+| ID | Componente ou fluxo real | Exploração possível | Acesso necessário | Pressuposto |
+|---|---|---|---|---|
+| P1 | `jev_ids/context.py`, `Rewriter.apply`; `prompts/nsl-kdd/context.json`, chave `note` | Nota anexada ao valor de `service` influencia a decisão. O arquivo contém uma nota que alega manutenção autorizada e solicita classificação normal. | Submissão de registros adulterados, fornecida ao atacante principal pelo experimento. | S1 |
+| P2 | Pool de exemplos rotulados; `jev_ids/context.py`, função `mislabel` | Envenenamento de rótulos; o nível `labels=flipped` altera probabilisticamente rótulos com taxa configurada de 0,5, sem garantir exatamente metade em uma amostra finita. | Insider ou comprometimento da preparação dos exemplos. | S2 |
+| P3 | Instruções em `prompts/nsl-kdd/jev.json` e níveis de `context.json`; `instructions_text` | Alteração das orientações para favorecer a categoria normal; `instructions=misleading` simula instruções enganosas. | Escrita na configuração ou comprometimento de sua origem. | S3 |
+| P4 | `jev_ids/records.py`, `complete_prediction`; política de avaliação de falhas | Sem `p_attack`, o veredito registrado é `None`; a política de métricas considera a falha como normal, conforme documentação da função. | Falha do processamento; provocar a falha intencionalmente exige capacidade adicional ainda não demonstrada. | S4 |
+
+Os níveis do código permitem simular adulterações, mas sua existência não prova que um adversário real tenha acesso aos componentes ou que o ataque funcione. P4 não é, por si só, uma vulnerabilidade do limiar 0,5: o problema é o tratamento da ausência de resposta.
+
 ### Diagrama de superfície de ataque
+
+![Superfície de ataque](diagramas/superficie-de-ataque.png)
+
+Fonte: `diagramas/superficie-de-ataque.mmd`. P1 pertence à interação principal; P2 e P3 são cenários ampliados com insider. P4 é um risco da política de falhas. Qwen e Laya devem ser analisados separadamente; o comportamento de cada integração precisa ser confirmado. A dependência de API externa aplica-se à execução Jev da base, não automaticamente às alternativas locais do grupo.
 
 ### Cenários de ameaça
 
+| ID | Cenário | Ponto | Pressuposto | Ativo |
+|---|---|---|---|---|
+| A1 | Um atacante simulado pode inserir uma nota em `service`, aproveitando a interpretação de dados como instruções, causando ausência de alerta sobre um registro malicioso. | P1 | S1 | AT1 |
+| A2 | Um insider pode adulterar os rótulos dos exemplos, aproveitando a confiança em referências sem verificação de integridade, causando decisões incorretas sobre registros maliciosos ou legítimos. | P2 | S2 | AT1, AT2, AT4 |
+| A3 | Um insider ou fornecedor comprometido pode alterar as instruções carregadas, aproveitando a confiança na configuração, causando uma tendência indevida de classificar ataques como normais. | P3 | S3 | AT1, AT2 |
+| A4 | Um adversário com capacidade de provocar falhas pode explorar a política que trata ausência de resposta como normal, causando subcontagem de ataques e perda de confiabilidade da avaliação. Essa capacidade não é presumida para o atacante principal. | P4 | S4 | AT1, AT3 |
+
+### Método de avaliação
+
+Escala qualitativa de probabilidade: **1**, acesso adicional restrito ou capacidade não demonstrada; **2**, entrada manipulável disponível, mas sucesso ainda não verificado; **3**, evidência específica de sucesso recorrente. Impacto: **1**, efeito localizado sem comprometer a classificação; **2**, degradação parcial relevante; **3**, comprometimento da detecção ou de um componente confiável capaz de influenciar várias decisões.
+
+**R = P × I** é uma pontuação de planejamento, não probabilidade numérica ou perda financeira. Como as escalas são ordinais, o produto é uma convenção de priorização. As notas não foram medidas experimentalmente e devem ser revistas após testes. O benchmark original não demonstra a eficácia destes ataques.
+
 ### Matriz de risco
 
-| ID | Cenário | Ponto | Pressuposto | Ativo | Probabilidade | Impacto | Risco |
-|---|---|---|---|---|---|---|---|
+| ID | Ponto | Pressuposto | Ativo | P | I | R | Justificativa de P | Justificativa de I |
+|---|---|---|---|---:|---:|---:|---|---|
+| A1 | P1 | S1 | AT1 | 2 | 3 | 6 | A nota pode ser submetida pelo atacante principal, mas sua eficácia depende do detector. | Uma evasão compromete a detecção de um registro malicioso. |
+| A2 | P2 | S2 | AT1, AT2, AT4 | 1 | 3 | 3 | Exige acesso aos exemplos, fora das capacidades do atacante principal. | Referências adulteradas podem influenciar várias decisões e falsos alarmes. |
+| A3 | P3 | S3 | AT1, AT2 | 1 | 3 | 3 | Exige escrita na configuração ou comprometimento de sua origem. | Instruções adulteradas podem influenciar todas as avaliações que as reutilizam. |
+| A4 | P4 | S4 | AT1, AT3 | 1 | 3 | 3 | Não foi demonstrado que o adversário consiga provocar falhas de processamento. | Falhas consideradas normais podem ocultar ataques na avaliação e comprometer sua confiabilidade. |
 
 ### Ameaça prioritária
+
+**A1 é a prioridade inicial**, por ter a maior pontuação estimada e corresponder à capacidade diretamente disponível na interação principal. A facilidade de acesso não comprova sucesso: o comportamento de Qwen e Laya precisa ser avaliado.
+
+Após uma revisão das instruções pelo defensor, o atacante pode observar seus novos vereditos e reformular a nota, por exemplo modificando a alegação de autoridade. Esse encadeamento deve ser alinhado às rodadas da seção 3.3.
+
+O responsável pela resiliência deverá desenvolver a resposta a A1, efeitos colaterais e risco residual. Dentro do recorte atual, a resposta é uma revisão das instruções. Controles de integridade dos exemplos e arquivos são recomendações para os cenários ampliados; sua implementação não é atribuída ao ciclo principal.
+
+### Evidência e limites
+
+A inspeção dos arquivos do ZIP `Jev-ids-adversarial-Developer (1).zip` confirmou os mecanismos descritos em P1–P4. Esta contribuição não executou testes de ataque, não produziu medidas de eficácia e não alterou o código. A seção 3.1 precisa registrar os pressupostos S1–S4 para completar a rastreabilidade exigida. Os cenários de insider devem continuar separados das capacidades do atacante principal.
