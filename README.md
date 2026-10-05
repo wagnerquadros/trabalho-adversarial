@@ -299,7 +299,17 @@ A inspeção dos arquivos do ZIP `Jev-ids-adversarial-Developer (1).zip` confirm
 
 A revisão das instruções atua antes da montagem da entrada do detector. A avaliação acompanha taxa de evasão nos registros maliciosos, F1, recall, falsos alarmes sobre registros legítimos, falhas e custo/latência. Falhas devem ser reportadas separadamente de classificações válidas. O futuro enunciado do Trabalho 2 poderá exigir ajustes nesta arquitetura.
 
-## 5. Origem, referências e uso de IA
+## 5. Fechamento: pergunta final
+
+> Depois que o sistema responder, o que o outro lado aprenderá e tentará fazer em seguida?
+
+**Depois que o defensor reforça as instruções**, o atacante aprende apenas pelos próprios vereditos: se tentativas com nota passam a gerar alerta, ele infere que a nota perdeu efeito, mesmo sem ver as instruções. Em seguida, tentará reformular a nota, por exemplo trocando a alegação de autoridade, ou retirá-la e atacar sem nota (R2 → R3 da seção 3.3).
+
+**Depois que o atacante retira a nota**, o defensor aprende pelos resultados autorizados que o reforço deixou de trazer benefício, mas continua custando processamento, latência e possíveis falsos alarmes. Em seguida, tentará aliviar o custo, voltando às instruções básicas, o que reabre espaço para a nota (R3 → R4 → R1).
+
+Cada resposta, portanto, revela informação ao outro lado, e nenhuma defesa encerra o ciclo. Isso coincide com o equilíbrio misto da seção 3.2: nenhum lado tem uma escolha fixa que seja sempre a melhor. O que o defensor pode controlar é a observabilidade: registrar versão das instruções, notas testadas, vereditos, falhas e custos por rodada para perceber a próxima adaptação, sem entregar ao atacante mais do que o veredito.
+
+## 6. Origem, referências e uso de IA
 
 O Jev IDS fornece a base de detectores, contextos, registros e métricas. O grupo propõe a separação de observações e o ciclo entre atacante caixa-preta e defensor adaptativo. A inspeção do código não equivale à validação experimental das ameaças.
 
@@ -322,7 +332,7 @@ Referências citadas no relatório. A lista completa, com o que cada fonte suste
 
 **Declaração desta edição:** houve apoio de IA na redação dos pressupostos, modelagem ilustrativa, cenários e organização do relatório. Os mecanismos de contexto e registro foram inspecionados no código fornecido. Os payoffs, rodadas e notas de risco são propostas para revisão do grupo, não resultados de experimentos. Cada integrante deve registrar seu próprio uso de IA e sua verificação.
 
-## 6. Entrega e contribuições
+## 7. Entrega e contribuições
 
 - Relatório principal: este README.
 - PDF dos slides: **link pendente**.
