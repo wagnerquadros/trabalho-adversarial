@@ -368,13 +368,13 @@ Referências citadas no relatório. A lista completa, com o que cada fonte suste
 - Prazo informado: **06/10/2026 às 23h59**.
 - Gravação preferencial no Canva. Integrantes do PPGES terão o vídeo exibido ao vivo e poderão responder perguntas; graduação responderá de forma assíncrona conforme solicitação docente.
 
-| Integrante | Parte atribuída na divisão                     | Registro de contribuição                                                                                                               |
-| ---------- | ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| Wagner     | Sistema, contexto e integração.                | Acrescentar commits/PRs e trecho do vídeo.                                                                                             |
-| Amanda     | Modelo estático e organização.                 | Branch `amanda`: fontes e referências, citações nas seções, equilíbrio misto da 3.2, glossário, fechamento e padronização das tabelas. |
-| Membro 3   | Modelo dinâmico e vídeo.                       | Confirmar nome e acrescentar commits/PRs.                                                                                              |
-| Camilla    | Superfície de ataque, cenários e riscos.       | Acrescentar PR da branch camilladev e trecho do vídeo.                                                                                 |
-| Membro 5   | Resposta, efeitos colaterais e risco residual. | Confirmar nome e revisar a proposta desta edição.                                                                                      |
-| Pietra     | Arquitetura e apresentação.                    | Acrescentar commits/PRs e links finais.                                                                                                |
+| Integrante | Parte atribuída na divisão                     | Registro de contribuição                                                                                                                                          |
+| ---------- | ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Wagner     | Sistema, contexto e integração.                | Acrescentar commits/PRs e trecho do vídeo.                                                                                                                        |
+| Amanda     | Modelo estático e organização.                 | Branch `amanda`: fontes e referências, citações nas seções, equilíbrio misto e análise de sensibilidade da 3.2, glossário, fechamento e padronização das tabelas. |
+| Membro 3   | Modelo dinâmico e vídeo.                       | Confirmar nome e acrescentar commits/PRs.                                                                                                                         |
+| Camilla    | Superfície de ataque, cenários e riscos.       | Acrescentar PR da branch camilladev e trecho do vídeo.                                                                                                            |
+| Membro 5   | Resposta, efeitos colaterais e risco residual. | Confirmar nome e revisar a proposta desta edição.                                                                                                                 |
+| Pietra     | Arquitetura e apresentação.                    | Acrescentar commits/PRs e links finais.                                                                                                                           |
 
 Antes de submeter, o grupo deve revisar as propostas estática, dinâmica e de resiliência, completar nomes, referências e links, exportar os diagramas de contexto e ciclo em PNG com fontes editáveis e conferir permissões de acesso ao PDF e vídeo. Esta versão não declara essas pendências concluídas.
