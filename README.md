@@ -304,9 +304,9 @@ A inspeção dos arquivos do ZIP `Jev-ids-adversarial-Developer (1).zip` confirm
 
 ![Arquitetura planejada](diagramas/arquitetura-planejada.png)
 
-Fonte editável: [quadro no Figma](https://www.figma.com/design/pioW9qAOO7tnPXLljz2aNk?node-id=47-2).
+Fonte editável: [quadro no Figma](https://www.figma.com/design/pioW9qAOO7tnPXLljz2aNk?node-id=54-2).
 
-O diagrama mostra os cinco componentes da tabela em operação e deixa explícito o que **não** muda no recorte: os demais atributos do registro, os exemplos rotulados, o modelo detector e o limiar de alerta. A primeira rodada não passa pela decisão, porque ainda não existe veredito anterior para dizer quem errou.
+O diagrama mostra os cinco componentes da tabela em operação. O que ele deliberadamente não mostra continua valendo: os demais atributos do registro, os exemplos rotulados, o modelo detector e o limiar de alerta permanecem fixos (seção 3.1); o atacante opera sob orçamento de tentativas e tamanho máximo de nota, e cada nota testada fica visível ao defensor; e o defensor registra cada versão de instrução com seu custo (seção 3.4). A primeira rodada não passa pela decisão, porque ainda não existe veredito anterior para dizer quem errou.
 
 A revisão das instruções atua antes da montagem da entrada do detector. A avaliação acompanha taxa de evasão nos registros maliciosos, F1, recall, falsos alarmes sobre registros legítimos, falhas e custo/latência. Falhas devem ser reportadas separadamente de classificações válidas. O futuro enunciado do Trabalho 2 poderá exigir ajustes nesta arquitetura.
 
