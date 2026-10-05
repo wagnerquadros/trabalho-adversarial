@@ -1,0 +1,10 @@
+flowchart TD
+ A["Atacante simulado"] -->|"Registro com nota"| O["Coordenador experimental"]
+ U["Registros legítimos do dataset"] --> O
+ D["Defensor"] -->|"Instruções revisadas"| O
+ E["Exemplos fixos"] --> O
+ O -->|"Entrada sem gabarito"| Q["Detector: Qwen ou Laya"]
+ Q -->|"Resposta"| V["Veredito e avaliação"]
+ G["Gabarito reservado"] --> V
+ V -->|"Somente veredito próprio"| A
+ V -->|"Resultados autorizados"| D
