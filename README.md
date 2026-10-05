@@ -118,9 +118,31 @@ Essas preferências dependem das hipóteses de eficácia e custo. Uma revisão d
 
 Contra B, o atacante prefere N (3 > 1); contra R, prefere S (1 > 0). Contra N, o defensor prefere R (2 > 0); contra S, prefere B (3 > 1). Portanto, nenhum jogador tem estratégia dominante e nenhuma célula constitui equilíbrio de Nash em estratégias puras, isto é, não há célula na qual nenhum jogador melhore mudando sozinho (Aula 4 da disciplina, conforme `fontes/referencias.md`).
 
-O ciclo de melhores respostas é N/B → N/R → S/R → S/B → N/B. O jogo finito admite equilíbrio misto sob uma representação apropriada de utilidades, mas não calculamos suas probabilidades: uma escala somente ordinal não justifica usar suas distâncias como utilidades cardinais. O cálculo misto é um aprofundamento opcional.
+O ciclo de melhores respostas é N/B → N/R → S/R → S/B → N/B. Todo jogo finito possui ao menos um equilíbrio, possivelmente em estratégias mistas, nas quais cada jogador sorteia suas ações com certas probabilidades ([Nash, 1951](https://doi.org/10.2307/1969529)).
 
-A ausência de equilíbrio puro motiva examinar adaptações sucessivas. Ela não prova que o sistema real percorrerá esse ciclo. Para os usuários legítimos, o resultado desejável envolve detecção com poucos falsos alarmes e custo aceitável; o payoff do defensor incorpora esses interesses.
+### Equilíbrio em estratégias mistas
+
+O cálculo abaixo é **ilustrativo**: ele trata os valores 0–3 como utilidades cardinais, isto é, supõe que as distâncias entre eles têm significado. Como a matriz informa apenas ordens de preferência, as probabilidades obtidas não são previsões; a conclusão robusta é qualitativa.
+
+Seja _q_ a probabilidade de o defensor escolher B. O atacante só aceita misturar N e S se as duas ações renderem o mesmo valor esperado:
+
+- N rende 3·_q_ + 0·(1 − _q_) = 3_q_;
+- S rende 1·_q_ + 1·(1 − _q_) = 1;
+- 3_q_ = 1, logo **_q_ = 1/3**: o defensor usa B em 1/3 das rodadas e R em 2/3.
+
+Seja _p_ a probabilidade de o atacante escolher N. O defensor só aceita misturar B e R se as duas ações renderem o mesmo valor esperado:
+
+- B rende 0·_p_ + 3·(1 − _p_) = 3 − 3_p_;
+- R rende 2·_p_ + 1·(1 − _p_) = 1 + _p_;
+- 3 − 3_p_ = 1 + _p_, logo **_p_ = 1/2**: o atacante usa a nota em metade das tentativas.
+
+No equilíbrio, o valor esperado é 1 para o atacante e 1,5 para o defensor. O atacante obtém o mesmo valor que obteria sem nunca usar a nota: a nota só compensa porque o defensor não pode reforçar sempre sem pagar custos. O defensor, por sua vez, só mantém o atacante indiferente se não for previsível: se usasse B com probabilidade maior que 1/3, a nota passaria a valer a pena; se usasse R sempre, pagaria o reforço também contra ataques sem nota.
+
+### O equilíbrio é bom para o sistema e para os usuários legítimos?
+
+Não plenamente. A célula N/B, em que a nota pode evadir a detecção, ainda ocorre em cerca de 1/2 × 1/3 = 1/6 das rodadas, e o reforço é pago em 2/3 das rodadas, inclusive quando não há nota, com possível custo de processamento, latência e falsos alarmes para registros legítimos. O defensor fica longe de seu melhor resultado (3, em S/B). Para os usuários legítimos, o resultado desejável envolve detecção com poucos falsos alarmes e custo aceitável; o payoff do defensor incorpora esses interesses, e o equilíbrio misto mostra que esses interesses não são plenamente atendidos.
+
+A ausência de equilíbrio puro e a necessidade de imprevisibilidade motivam examinar adaptações sucessivas na seção 3.3. Isso não prova que o sistema real percorrerá esse ciclo: as probabilidades dependem dos payoffs hipotéticos e precisam ser revistas quando houver medidas com Qwen e Laya.
 
 ## 3.3 Modelo estratégico dinâmico
 
