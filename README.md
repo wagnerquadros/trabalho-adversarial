@@ -2,6 +2,31 @@
 
 ### Um atacante manipula o que o detector lê para não ser alertado; o defensor observa os erros e endurece o contexto; os dois se adaptam rodada a rodada
 
+## Glossário
+
+| Termo                       | Significado neste trabalho                                                                                                                   |
+| --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Registro de conexão (fluxo) | Linha do NSL-KDD que descreve uma conexão de rede por 41 atributos, como protocolo, `service` e bytes. É o que o detector julga.             |
+| Contexto                    | Tudo o que acompanha o registro na entrada do detector: instruções, descrições dos atributos, exemplos rotulados e forma de apresentação.    |
+| Instruções                  | Texto que explica a tarefa ao detector. É a única parte do contexto que o defensor pode revisar.                                             |
+| Nota                        | Texto que o atacante anexa ao valor do campo `service` para tentar influenciar o veredito.                                                   |
+| Exemplo rotulado            | Registro de referência com a categoria correta, mostrado ao detector como modelo.                                                            |
+| `p_attack`                  | Probabilidade de ataque devolvida pelo detector, entre 0 e 1.                                                                                |
+| Limiar                      | Valor de corte de `p_attack`: 0,5. A partir dele, o registro gera alerta.                                                                    |
+| Veredito                    | Resultado final de um registro: alerta ou sem alerta.                                                                                        |
+| Falso alarme                | Alerta emitido sobre um registro legítimo.                                                                                                   |
+| F1                          | Medida de desempenho que combina precisão (alertas corretos entre todos os alertas) e revocação (ataques detectados entre todos os ataques). |
+| Evasão                      | Registro malicioso que recebe o veredito sem alerta.                                                                                         |
+| Sonda                       | Tentativa que o atacante envia para observar o veredito e aprender como o detector reage.                                                    |
+| Rodada                      | Um ciclo de ação, resposta, observação e adaptação entre atacante e defensor.                                                                |
+| Payoff                      | Número que representa a preferência de um jogador por um resultado do jogo.                                                                  |
+| Melhor resposta             | Ação que dá ao jogador o maior payoff diante de uma escolha fixa do outro jogador.                                                           |
+| Equilíbrio de Nash          | Combinação de ações em que nenhum jogador melhora mudando sozinho.                                                                           |
+| Estratégia mista            | Escolha de ações por sorteio, com probabilidades definidas.                                                                                  |
+| Insider                     | Pessoa com acesso interno a componentes, como exemplos ou arquivos de instruções.                                                            |
+| Oráculo                     | Fonte que revela ao atacante uma medida que ele não teria na prática, como o F1 da avaliação.                                                |
+| Fail-open                   | Política em que uma falha de processamento é tratada como "sem alerta".                                                                      |
+
 ## 1. Proposta
 
 Um atacante simulado modifica o texto apresentado ao Jev para tentar evitar a detecção; o defensor observa os erros e revisa as instruções. Ambos adaptam suas escolhas a partir das respostas que podem observar.
@@ -30,23 +55,21 @@ No Jev IDS, cada avaliação reúne um registro de conexão, instruções sobre 
 
 O acesso ao Jev ocorre por API, com cobrança por consumo de tokens de entrada. Para viabilizar a exploração de diferentes contextos sem despesas com essa API, optamos pelos modelos locais descritos a seguir.
 
-
-| Tecnologia | O que é | Papel na proposta |
-|---|---|---|
-| **Qwen3:8b** | Modelo de linguagem da família Qwen, com cerca de oito bilhões de parâmetros, capaz de interpretar instruções e gerar respostas textuais. | Será solicitado a classificar cada registro e responder em formato estruturado. Será utilizado com o modo *thinking* desativado. [Documentação do Qwen](https://huggingface.co/Qwen/Qwen3-8B). |
-| **Ollama** | Software que permite executar modelos de IA no computador e acessá-los por uma interface de programação. | Executará o Qwen localmente e fará a comunicação entre ele e o projeto. O modelo avaliado será o Qwen; Ollama será o ambiente de execução. [Documentação do Ollama](https://docs.ollama.com/). |
-| **Laya multilingual** | Modelo de decisão da Convai Innovations, com pesos abertos, voltado a responder perguntas estruturadas sobre informações fornecidas. Integra a família Laya, apresentada como uma abordagem *System 1*. | Será a segunda alternativa de classificador local, retornando probabilidades e categorias em um formato compatível com a integração do Jev. [Documentação do Laya](https://huggingface.co/convaiinnovations/laya). |
+| Tecnologia            | O que é                                                                                                                                                                                                 | Papel na proposta                                                                                                                                                                                                  |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Qwen3:8b**          | Modelo de linguagem da família Qwen, com cerca de oito bilhões de parâmetros, capaz de interpretar instruções e gerar respostas textuais.                                                               | Será solicitado a classificar cada registro e responder em formato estruturado. Será utilizado com o modo _thinking_ desativado. [Documentação do Qwen](https://huggingface.co/Qwen/Qwen3-8B).                     |
+| **Ollama**            | Software que permite executar modelos de IA no computador e acessá-los por uma interface de programação.                                                                                                | Executará o Qwen localmente e fará a comunicação entre ele e o projeto. O modelo avaliado será o Qwen; Ollama será o ambiente de execução. [Documentação do Ollama](https://docs.ollama.com/).                     |
+| **Laya multilingual** | Modelo de decisão da Convai Innovations, com pesos abertos, voltado a responder perguntas estruturadas sobre informações fornecidas. Integra a família Laya, apresentada como uma abordagem _System 1_. | Será a segunda alternativa de classificador local, retornando probabilidades e categorias em um formato compatível com a integração do Jev. [Documentação do Laya](https://huggingface.co/convaiinnovations/laya). |
 
 Essa escolha permite utilizar os recursos computacionais disponíveis ao grupo, sem cobrança de um provedor por cada inferência local. Permanecem os custos de processamento, memória e energia. O Jev IDS continuará sendo a referência do trabalho, enquanto as decisões analisadas serão produzidas pelo Qwen e pelo Laya, modelos distintos do Jev.
 
-
-O estudo utiliza o NSL-KDD, um conjunto de dados com registros de conexões descritos por 41 atributos, como protocolo, serviço, duração e quantidade de bytes. A categoria verdadeira de cada registro avaliado fica reservada à verificação dos resultados e não é apresentada ao detector.
+O estudo utiliza o NSL-KDD, um conjunto de dados com registros de conexões descritos por 41 atributos, como protocolo, serviço, duração e quantidade de bytes. Ele foi derivado do KDD'99 com a remoção de registros duplicados ([Tavallaee et al., 2009](https://doi.org/10.1109/CISDA.2009.5356528); [CIC/UNB](https://www.unb.ca/cic/datasets/nsl.html)). A categoria verdadeira de cada registro avaliado fica reservada à verificação dos resultados e não é apresentada ao detector.
 
 ### O que significa alterar o contexto
 
 Contexto é a informação que orienta a interpretação do registro, incluindo instruções, descrições dos atributos e das categorias, exemplos de referência e a apresentação dos dados. Alterar essas informações pode mudar a decisão do Jev sem retreinar o modelo.
 
-Neste trabalho, serão exploradas duas alterações: o atacante poderá inserir uma nota enganosa no campo `service`, enquanto o defensor poderá revisar as instruções da tarefa. Os demais elementos permanecerão fixos. O risco investigado é que uma mensagem inserida como dado seja interpretada pelo detector como uma orientação confiável.
+Neste trabalho, serão exploradas duas alterações: o atacante poderá inserir uma nota enganosa no campo `service`, enquanto o defensor poderá revisar as instruções da tarefa. Os demais elementos permanecerão fixos. O risco investigado é que uma mensagem inserida como dado seja interpretada pelo detector como uma orientação confiável. Esse risco é conhecido como injeção indireta de prompt: conteúdo externo, ao ser lido pelo modelo, altera seu comportamento de forma não pretendida ([OWASP, 2025](https://genai.owasp.org/llmrisk/llm01-prompt-injection/); [Greshake et al., 2023](https://doi.org/10.48550/arXiv.2302.12173)).
 
 A interação ocorrerá em uma simulação com registros do dataset, sem envio de ataques a uma rede real. O atacante receberá apenas o veredito de suas próprias tentativas; o defensor receberá os resultados autorizados da avaliação para orientar suas revisões. A análise buscará compreender como essas escolhas afetam a detecção de ataques e os falsos alarmes sobre registros legítimos.
 
@@ -58,10 +81,10 @@ A análise considera dois participantes estratégicos: um atacante simulado e um
 
 ### Atores
 
-| Ator | Objetivo | Ações ou capacidades | Informações observáveis | Restrições ou custos |
-|---|---|---|---|---|
-| Atacante simulado | Fazer registros maliciosos receberem o veredito sem alerta. | Escolher, manter, retirar ou reformular uma nota textual inserida no campo `service`. | Suas próprias notas e os vereditos das próprias tentativas: alerta ou sem alerta. | Não acessa as instruções do defensor, os exemplos, o gabarito ou as métricas de avaliação. Não altera outros atributos. Está sujeito a limites de tentativas e de tamanho da nota. |
-| Defensor | Detectar registros maliciosos e limitar os falsos alarmes sobre tráfego legítimo. | Escolher, manter ou revisar as instruções apresentadas ao Jev. | Suas instruções, as notas testadas e os resultados autorizados da avaliação, incluindo ataques detectados, ataques não detectados, falsos alarmes e erros de processamento. | Não altera registros, exemplos, modelo ou limiar de alerta. Está sujeito a limites de revisões, tamanho do texto e chamadas ao detector. Não utiliza os dados reservados à avaliação final para adaptar suas escolhas. |
+| Ator              | Objetivo                                                                          | Ações ou capacidades                                                                  | Informações observáveis                                                                                                                                                     | Restrições ou custos                                                                                                                                                                                                   |
+| ----------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Atacante simulado | Fazer registros maliciosos receberem o veredito sem alerta.                       | Escolher, manter, retirar ou reformular uma nota textual inserida no campo `service`. | Suas próprias notas e os vereditos das próprias tentativas: alerta ou sem alerta.                                                                                           | Não acessa as instruções do defensor, os exemplos, o gabarito ou as métricas de avaliação. Não altera outros atributos. Está sujeito a limites de tentativas e de tamanho da nota.                                     |
+| Defensor          | Detectar registros maliciosos e limitar os falsos alarmes sobre tráfego legítimo. | Escolher, manter ou revisar as instruções apresentadas ao Jev.                        | Suas instruções, as notas testadas e os resultados autorizados da avaliação, incluindo ataques detectados, ataques não detectados, falsos alarmes e erros de processamento. | Não altera registros, exemplos, modelo ou limiar de alerta. Está sujeito a limites de revisões, tamanho do texto e chamadas ao detector. Não utiliza os dados reservados à avaliação final para adaptar suas escolhas. |
 
 O retorno dos vereditos ao atacante é uma condição definida pela simulação. O defensor identifica acertos e erros com apoio do avaliador, que compara as respostas com o gabarito mantido separadamente da entrada do Jev.
 
@@ -73,8 +96,8 @@ AT1: integridade da classificação e detecção de ataques; AT2: integridade do
 
 ### Pressupostos
 
-- **S1 — Separação entre dados e instruções:** valores do registro são dados, sem autoridade para modificar a tarefa. Falha quando uma nota em `service` é seguida como instrução.
-- **S2 — Integridade dos exemplos:** os rótulos de referência são corretos. Falha quando um insider ou origem comprometida os adultera.
+- **S1 — Separação entre dados e instruções:** valores do registro são dados, sem autoridade para modificar a tarefa. Falha quando uma nota em `service` é seguida como instrução. Modelos generativos combinam os canais de dados e de instrução, o que torna essa falha possível ([NIST AI 100-2 E2025, seção 3.4](https://doi.org/10.6028/NIST.AI.100-2e2025)).
+- **S2 — Integridade dos exemplos:** os rótulos de referência são corretos. Falha quando um insider ou origem comprometida os adultera, o que corresponde ao envenenamento por troca de rótulos, ou _label flipping_ ([NIST AI 100-2 E2025, seção 2.3](https://doi.org/10.6028/NIST.AI.100-2e2025)).
 - **S3 — Integridade das instruções:** as orientações carregadas têm origem autorizada e permanecem íntegras. Falha quando alguém com acesso à configuração insere instruções enganosas.
 - **S4 — Confiabilidade do resultado:** classificar como normal pressupõe uma resposta válida. Falha quando ausência de resposta é contabilizada como normal. Na base inspecionada, ausência de `p_attack` produz veredito `None`, considerado normal na avaliação.
 
@@ -101,9 +124,9 @@ A matriz é uma hipótese estratégica para discussão do grupo. Os valores 0–
 ### Matriz 2×2
 
 | Atacante / Defensor | B — instruções básicas | R — instruções reforçadas |
-|---|---|---|
-| N — ataque com nota | (3, 0) ★A | (0, 2) ★D |
-| S — ataque sem nota | (1, 3) ★D | (1, 1) ★A |
+| ------------------- | ---------------------- | ------------------------- |
+| N — ataque com nota | (3, 0) ★A              | (0, 2) ★D                 |
+| S — ataque sem nota | (1, 3) ★D              | (1, 1) ★A                 |
 
 ### Justificativa dos payoffs
 
@@ -116,11 +139,61 @@ Essas preferências dependem das hipóteses de eficácia e custo. Uma revisão d
 
 ### Melhores respostas e equilíbrio
 
-Contra B, o atacante prefere N (3 > 1); contra R, prefere S (1 > 0). Contra N, o defensor prefere R (2 > 0); contra S, prefere B (3 > 1). Portanto, nenhum jogador tem estratégia dominante e nenhuma célula constitui equilíbrio de Nash em estratégias puras.
+Contra B, o atacante prefere N (3 > 1); contra R, prefere S (1 > 0). Contra N, o defensor prefere R (2 > 0); contra S, prefere B (3 > 1). Portanto, nenhum jogador tem estratégia dominante e nenhuma célula constitui equilíbrio de Nash em estratégias puras, isto é, não há célula na qual nenhum jogador melhore mudando sozinho (Aula 4 da disciplina, conforme `fontes/referencias.md`).
 
-O ciclo de melhores respostas é N/B → N/R → S/R → S/B → N/B. O jogo finito admite equilíbrio misto sob uma representação apropriada de utilidades, mas não calculamos suas probabilidades: uma escala somente ordinal não justifica usar suas distâncias como utilidades cardinais. O cálculo misto é um aprofundamento opcional.
+O ciclo de melhores respostas é N/B → N/R → S/R → S/B → N/B. Todo jogo finito possui ao menos um equilíbrio, possivelmente em estratégias mistas, nas quais cada jogador sorteia suas ações com certas probabilidades ([Nash, 1951](https://doi.org/10.2307/1969529)).
 
-A ausência de equilíbrio puro motiva examinar adaptações sucessivas. Ela não prova que o sistema real percorrerá esse ciclo. Para os usuários legítimos, o resultado desejável envolve detecção com poucos falsos alarmes e custo aceitável; o payoff do defensor incorpora esses interesses.
+### Equilíbrio em estratégias mistas
+
+O cálculo abaixo é **ilustrativo**: ele trata os valores 0–3 como utilidades cardinais, isto é, supõe que as distâncias entre eles têm significado. Como a matriz informa apenas ordens de preferência, as probabilidades obtidas não são previsões; a conclusão robusta é qualitativa.
+
+Seja _q_ a probabilidade de o defensor escolher B. O atacante só aceita misturar N e S se as duas ações renderem o mesmo valor esperado:
+
+- N rende 3·_q_ + 0·(1 − _q_) = 3_q_;
+- S rende 1·_q_ + 1·(1 − _q_) = 1;
+- 3_q_ = 1, logo **_q_ = 1/3**: o defensor usa B em 1/3 das rodadas e R em 2/3.
+
+Seja _p_ a probabilidade de o atacante escolher N. O defensor só aceita misturar B e R se as duas ações renderem o mesmo valor esperado:
+
+- B rende 0·_p_ + 3·(1 − _p_) = 3 − 3_p_;
+- R rende 2·_p_ + 1·(1 − _p_) = 1 + _p_;
+- 3 − 3_p_ = 1 + _p_, logo **_p_ = 1/2**: o atacante usa a nota em metade das tentativas.
+
+No equilíbrio, o valor esperado é 1 para o atacante e 1,5 para o defensor. O atacante obtém o mesmo valor que obteria sem nunca usar a nota: a nota só compensa porque o defensor não pode reforçar sempre sem pagar custos. O defensor, por sua vez, só mantém o atacante indiferente se não for previsível: se usasse B com probabilidade maior que 1/3, a nota passaria a valer a pena; se usasse R sempre, pagaria o reforço também contra ataques sem nota.
+
+### O equilíbrio é bom para o sistema e para os usuários legítimos?
+
+Não plenamente. A célula N/B, em que a nota pode evadir a detecção, ainda ocorre em cerca de 1/2 × 1/3 = 1/6 das rodadas, e o reforço é pago em 2/3 das rodadas, inclusive quando não há nota, com possível custo de processamento, latência e falsos alarmes para registros legítimos. O defensor fica longe de seu melhor resultado (3, em S/B). Para os usuários legítimos, o resultado desejável envolve detecção com poucos falsos alarmes e custo aceitável; o payoff do defensor incorpora esses interesses, e o equilíbrio misto mostra que esses interesses não são plenamente atendidos.
+
+A ausência de equilíbrio puro e a necessidade de imprevisibilidade motivam examinar adaptações sucessivas na seção 3.3. Isso não prova que o sistema real percorrerá esse ciclo: as probabilidades dependem dos payoffs hipotéticos e precisam ser revistas quando houver medidas com Qwen e Laya.
+
+### Análise de sensibilidade: o que acontece se um payoff estiver errado?
+
+Os payoffs são estimativas. Para saber quais conclusões resistem a erros nessas estimativas, basta observar que o ciclo de melhores respostas depende de **quatro comparações**, uma por seta do ciclo. Se as quatro valem, nenhuma célula é equilíbrio puro. Se uma delas falha, o ciclo se rompe naquela seta e uma célula específica vira equilíbrio puro. Cada comparação corresponde a uma hipótese sobre o sistema. Na tabela, A(x, y) e D(x, y) são os payoffs do atacante e do defensor na célula x/y.
+
+| Hipótese                                             | Comparação (valores atuais) | Se for falsa, vira equilíbrio puro | O que isso significaria                                                                                                         | Métrica que a testaria no Trabalho 2                                                                                            |
+| ---------------------------------------------------- | --------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| H1: a nota engana o detector com instruções básicas. | A(N, B) > A(S, B) (3 > 1)   | S/B                                | A nota não traz vantagem; o atacante desiste dela e o defensor não precisa reforçar. A1 perde prioridade na 3.4.                | Taxa de evasão de registros maliciosos com nota e sem nota, ambos com instruções básicas.                                       |
+| H2: uma nota que falha custa algo ao atacante.       | A(S, R) > A(N, R) (1 > 0)   | N/R                                | O atacante mantém a nota sempre e o defensor reforça sempre. Não há corrida, mas o custo do reforço vira permanente.            | Taxa de evasão com nota e sem nota, ambos com instruções reforçadas; consumo do orçamento de tentativas pelas notas que falham. |
+| H3: o reforço neutraliza a nota.                     | D(N, R) > D(N, B) (2 > 0)   | N/B                                | A defesa não funciona; o atacante evade com nota e o defensor não tem resposta dentro do recorte. É o pior caso para o sistema. | Taxa de evasão com nota, comparando instruções básicas e reforçadas.                                                            |
+| H4: reforçar sem necessidade custa algo ao defensor. | D(S, B) > D(S, R) (3 > 1)   | S/R                                | O defensor reforça sempre e o atacante desiste da nota. O ciclo para a favor do defensor.                                       | Falsos alarmes sobre os registros legítimos, recall sem nota, latência e tokens, comparando instruções básicas e reforçadas.    |
+
+Três conclusões saem da tabela:
+
+1. **O ciclo da 3.2 e a corrida armamentista da 3.3 não são garantidos.** Eles existem somente se H1 a H4 forem verdadeiras ao mesmo tempo. Basta uma falhar para o jogo se estabilizar numa célula.
+2. **Nem todas as falhas são iguais.** Se H3 falhar, o sistema fica no pior caso (N/B) e a resposta proposta para A1 na seção 3.4 precisa ser substituída. Se H4 falhar, o defensor ganha: reforçar passa a ser sempre a melhor escolha. H3 é, portanto, a hipótese que mais importa medir primeiro.
+3. **No equilíbrio misto, a frequência com que o defensor reforça depende só dos payoffs do atacante, e vice-versa.** O valor _q_ = 1/3 saiu da indiferença do atacante (3_q_ = 1). Se a nota rendesse mais ao atacante em N/B, o defensor precisaria usar B ainda menos vezes. O defensor não escolhe essa frequência pelos próprios custos, e sim pelo quanto a nota vale para o adversário.
+
+As quatro métricas da tabela usam somente informações que o avaliador já produz (vereditos, gabarito reservado, falhas, tempo e tokens). Por isso podem ser medidas no Trabalho 2 sem dar ao atacante acesso a nada além do veredito.
+
+### O que os números já publicados indicam
+
+O Jev IDS publicou resultados do Jev sobre o NSL-KDD, com 1.126 registros maliciosos e 874 legítimos por semente ([`docs/results.md`](https://github.com/Tucelos/Jev-ids-adversarial/blob/main/docs/results.md), commit `57fa123`). Eles não testam a nota, mas ajudam a calibrar dois payoffs:
+
+- **Atacar sem nota já rende algo ao atacante.** Com um exemplo por categoria (k = 1), o recall sobre todos os ataques é 0,778: cerca de 22% dos registros maliciosos já passam sem alerta, sem nenhuma nota. Isso sustenta A(S, B) = A(S, R) = 1, e não 0.
+- **Mudar o contexto tem custo para os usuários legítimos, o que torna H4 plausível.** Passar de nenhum exemplo (k = 0) para um exemplo (k = 1) elevou o recall de 0,654 para 0,778, mas a precisão caiu de 0,972 para 0,953. Combinando recall, precisão e o total de ataques, os falsos alarmes passam de cerca de 21 para 43 em 874 registros legítimos; o valor 43 coincide com o publicado. O custo da API subiu de US$ 43 para US$ 74 por milhão de registros; a latência ficou estável (310 ms e 315 ms).
+
+**Limites:** os números são do Jev, não do Qwen nem do Laya; a mudança medida foi no número de exemplos, não nas instruções; e nenhuma nota foi testada. Eles tornam as hipóteses plausíveis, mas não substituem as medidas da tabela acima.
 
 ## 3.3 Modelo estratégico dinâmico
 
@@ -132,18 +205,18 @@ A sequência percorre o ciclo de melhores respostas identificado na seção 3.2 
 
 As rodadas abaixo são um cenário de planejamento, não um histórico de execuções. Uma transição ocorre somente se as observações previstas aparecerem. Cada modelo deve ser avaliado separadamente.
 
-| Rodada | Ação do atacante | Resposta do defensor | Observação autorizada | Adaptação seguinte |
-|---|---|---|---|---|
-| **R1 — N/B** | Submete o registro malicioso com uma nota em `service` que alega manutenção autorizada e pede a classificação normal. | Mantém as instruções básicas. | **Atacante:** os registros com nota recebem "sem alerta". **Defensor:** o avaliador reporta evasões no conjunto de desenvolvimento e as notas correspondentes. | O defensor passa a **R**: instruções que declaram que valores do registro, inclusive `service`, são dados não confiáveis e não alteram a tarefa. |
-| **R2 — N/R** | Mantém a mesma nota, para sondar o novo comportamento. | Aplica as instruções reforçadas. | **Atacante:** a nota que passava agora recebe alerta. Ele percebe *que* algo mudou, não *o quê*. **Defensor:** a evasão por nota cai, mas sobem os falsos alarmes sobre registros legítimos cujo `service` é raro — o reforço ensina o detector a desconfiar do campo, e não apenas da nota. | **Atacante:** a nota virou passivo; retira-a, passando a **S**. **Defensor:** passa a contabilizar o custo de **R** em falso alarme. |
-| **R3 — S/R** | Submete o ataque sem nota. Em paralelo, gasta parte do orçamento sondando variantes da nota, para descobrir qual parte dela era punida. | Mantém **R** enquanto mede seu custo. | **Atacante:** sem a nota volta a passar na taxa de base do detector, o que indica que o punido era a nota. **Defensor:** **R** não traz ganho contra **S** e segue cobrando falso alarme de quem não participa da disputa. Ele também **vê as notas sondadas**, porque notas testadas estão entre suas observações autorizadas. | **Defensor:** volta a **B**, decisão correta pelo custo medido e arriscada diante da sondagem que ele acabou de observar. **Atacante:** conclui a sondagem. |
-| **R4 — S/B** | Mantém o ataque sem nota enquanto encerra a sondagem. | Retorna às instruções básicas. | **Atacante:** registros que recebiam alerta na R3 voltam a passar, sinal de que o regime afrouxou. A sondagem indica que a punição recaía sobre a *alegação de autoridade*, não sobre a presença de texto. **Defensor:** sem a nota, **B** e **R** se equivalem em detecção, e **B** custa menos. | O atacante volta a **N**, com uma nota de outra natureza: sem ordem e sem alegação de autoridade, apenas um qualificador de serviço plausível dentro do vocabulário do dataset. |
+| Rodada       | Ação do participante                                                                                                                    | Resposta do sistema ou defensor       | O que se torna observável?                                                                                                                                                                                                                                                                                                      | Adaptação para a rodada seguinte                                                                                                                                                |
+| ------------ | --------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **R1 — N/B** | Submete o registro malicioso com uma nota em `service` que alega manutenção autorizada e pede a classificação normal.                   | Mantém as instruções básicas.         | **Atacante:** os registros com nota recebem "sem alerta". **Defensor:** o avaliador reporta evasões no conjunto de desenvolvimento e as notas correspondentes.                                                                                                                                                                  | O defensor passa a **R**: instruções que declaram que valores do registro, inclusive `service`, são dados não confiáveis e não alteram a tarefa.                                |
+| **R2 — N/R** | Mantém a mesma nota, para sondar o novo comportamento.                                                                                  | Aplica as instruções reforçadas.      | **Atacante:** a nota que passava agora recebe alerta. Ele percebe _que_ algo mudou, não _o quê_. **Defensor:** a evasão por nota cai, mas sobem os falsos alarmes sobre registros legítimos cujo `service` é raro — o reforço ensina o detector a desconfiar do campo, e não apenas da nota.                                    | **Atacante:** a nota virou passivo; retira-a, passando a **S**. **Defensor:** passa a contabilizar o custo de **R** em falso alarme.                                            |
+| **R3 — S/R** | Submete o ataque sem nota. Em paralelo, gasta parte do orçamento sondando variantes da nota, para descobrir qual parte dela era punida. | Mantém **R** enquanto mede seu custo. | **Atacante:** sem a nota volta a passar na taxa de base do detector, o que indica que o punido era a nota. **Defensor:** **R** não traz ganho contra **S** e segue cobrando falso alarme de quem não participa da disputa. Ele também **vê as notas sondadas**, porque notas testadas estão entre suas observações autorizadas. | **Defensor:** volta a **B**, decisão correta pelo custo medido e arriscada diante da sondagem que ele acabou de observar. **Atacante:** conclui a sondagem.                     |
+| **R4 — S/B** | Mantém o ataque sem nota enquanto encerra a sondagem.                                                                                   | Retorna às instruções básicas.        | **Atacante:** registros que recebiam alerta na R3 voltam a passar, sinal de que o regime afrouxou. A sondagem indica que a punição recaía sobre a _alegação de autoridade_, não sobre a presença de texto. **Defensor:** sem a nota, **B** e **R** se equivalem em detecção, e **B** custa menos.                               | O atacante volta a **N**, com uma nota de outra natureza: sem ordem e sem alegação de autoridade, apenas um qualificador de serviço plausível dentro do vocabulário do dataset. |
 
 ### Por que o ciclo não retorna ao ponto de partida
 
 A R4 devolve o par de ações ao estado da R1, mas **o estado da disputa é outro**, por três razões:
 
-1. **A nota mudou de natureza.** A nota da R1 tentava *alterar a tarefa*; a nota que abre a volta seguinte tenta *alterar a evidência*. O reforço **R**, redigido para negar autoridade a valores do registro, não cobre uma nota que não dá ordem alguma. A defesa que funcionou continua disponível e deixou de ser suficiente.
+1. **A nota mudou de natureza.** A nota da R1 tentava _alterar a tarefa_; a nota que abre a volta seguinte tenta _alterar a evidência_. O reforço **R**, redigido para negar autoridade a valores do registro, não cobre uma nota que não dá ordem alguma. A defesa que funcionou continua disponível e deixou de ser suficiente.
 2. **O defensor passou a conhecer o preço de R.** Na R1 ele podia adotar o reforço sem saber quanto custava; depois da R2 e da R3 ele sabe que custa falso alarme sobre `service` raro. A mesma ação, com o mesmo rótulo, deixou de ser barata.
 3. **O orçamento do atacante diminuiu.** As tentativas de sondagem da R3 e da R4 não voltam, e cada uma delas revelou ao defensor uma nota testada.
 
@@ -169,11 +242,11 @@ O ramo no fim do ciclo é o que liga uma rodada à seguinte: **quem adapta depen
 
 As rodadas acima são um cenário de planejamento. Existem, porém, medições anteriores sobre a base do Jev IDS que indicam a **ordem de grandeza e a direção** de duas das alterações de contexto descritas. Elas foram produzidas em um estudo paralelo, **não são o experimento deste trabalho** e **não usaram Qwen nem Laya**: o detector foi o Nimble 9B, de pesos abertos, sobre o NSL-KDD no recorte `pilot` de 300 registros, com três sementes.
 
-| Alteração medida | F1 | Relação com esta seção |
-|---|---|---|
-| Contexto de referência | 0,673 | linha de base da comparação |
-| Texto injetado no campo do registro | 0,250 | **mesmo mecanismo da ação N** e do ponto P1 da seção 3.4: a nota anexada ao valor de `service`. McNemar p < 0,001. |
-| Descrição das colunas enriquecida | 0,765 | **não é a ação R.** É outro fator de contexto, e serve apenas para mostrar que uma revisão de contexto pode mover o F1 em cerca de +0,09. McNemar p < 0,001. |
+| Alteração medida                    | F1    | Relação com esta seção                                                                                                                                       |
+| ----------------------------------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Contexto de referência              | 0,673 | linha de base da comparação                                                                                                                                  |
+| Texto injetado no campo do registro | 0,250 | **mesmo mecanismo da ação N** e do ponto P1 da seção 3.4: a nota anexada ao valor de `service`. McNemar p < 0,001.                                           |
+| Descrição das colunas enriquecida   | 0,765 | **não é a ação R.** É outro fator de contexto, e serve apenas para mostrar que uma revisão de contexto pode mover o F1 em cerca de +0,09. McNemar p < 0,001. |
 
 A primeira linha de ataque é a relevante: ela sustenta que o mecanismo da ação **N** pode derrubar a detecção de forma expressiva, e não que isso ocorrerá no Qwen ou no Laya com esta nota específica. Um modelo diferente pode reagir de outra maneira, e a medição do comportamento de cada um continua pendente.
 
@@ -211,6 +284,8 @@ A corrida não é limitada pela técnica, e sim por dois orçamentos: o de alarm
 
 Como Qwen e Laya são modelos distintos, a corrida pode ter formatos diferentes em cada um, e os dois devem ser acompanhados separadamente. O `agent.py` da base, que utiliza F1 como retorno de busca, representa uma condição com oráculo e não deve ser confundido com o atacante caixa-preta proposto aqui.
 
+Esse é o padrão da corrida armamentista reativa, em que atacante e projetista adaptam o comportamento em resposta ao oponente ([Biggio e Roli, 2018, seção 2](https://doi.org/10.1016/j.patcog.2018.07.023); Aula 5 da disciplina). A análise de sensibilidade da seção 3.2 detalha um limite: a corrida só continua enquanto as hipóteses H1 a H4 forem verdadeiras ao mesmo tempo. Se o reforço não neutralizar a nota (H3 falsa), o jogo para em N/B, a favor do atacante; se reforçar sem necessidade não custar nada (H4 falsa), para em S/R, a favor do defensor. O aumento de falso alarme descrito nas R2 e R3 é exatamente o custo que mantém H4 verdadeira.
+
 ## 3.4 Ameaças e riscos
 
 ### Escopo e ativos
@@ -232,14 +307,14 @@ Os pontos e cenários abaixo se relacionam aos pressupostos S1–S4 da seção 3
 
 ### Pontos de exploração
 
-| ID | Componente ou fluxo real | Exploração possível | Acesso necessário | Pressuposto |
-|---|---|---|---|---|
-| P1 | `jev_ids/context.py`, `Rewriter.apply`; `prompts/nsl-kdd/context.json`, chave `note` | Nota anexada ao valor de `service` influencia a decisão. O arquivo contém uma nota que alega manutenção autorizada e solicita classificação normal. | Submissão de registros adulterados, fornecida ao atacante principal pelo experimento. | S1 |
-| P2 | Pool de exemplos rotulados; `jev_ids/context.py`, função `mislabel` | Envenenamento de rótulos; o nível `labels=flipped` altera probabilisticamente rótulos com taxa configurada de 0,5, sem garantir exatamente metade em uma amostra finita. | Insider ou comprometimento da preparação dos exemplos. | S2 |
-| P3 | Instruções em `prompts/nsl-kdd/jev.json` e níveis de `context.json`; `instructions_text` | Alteração das orientações para favorecer a categoria normal; `instructions=misleading` simula instruções enganosas. | Escrita na configuração ou comprometimento de sua origem. | S3 |
-| P4 | `jev_ids/records.py`, `complete_prediction`; política de avaliação de falhas | Sem `p_attack`, o veredito registrado é `None`; a política de métricas considera a falha como normal, conforme documentação da função. | Falha do processamento; provocar a falha intencionalmente exige capacidade adicional ainda não demonstrada. | S4 |
+| ID  | Componente ou fluxo real                                                                 | Exploração possível                                                                                                                                                      | Acesso necessário                                                                                           | Pressuposto |
+| --- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------- | ----------- |
+| P1  | `jev_ids/context.py`, `Rewriter.apply`; `prompts/nsl-kdd/context.json`, chave `note`     | Nota anexada ao valor de `service` influencia a decisão. O arquivo contém uma nota que alega manutenção autorizada e solicita classificação normal.                      | Submissão de registros adulterados, fornecida ao atacante principal pelo experimento.                       | S1          |
+| P2  | Pool de exemplos rotulados; `jev_ids/context.py`, função `mislabel`                      | Envenenamento de rótulos; o nível `labels=flipped` altera probabilisticamente rótulos com taxa configurada de 0,5, sem garantir exatamente metade em uma amostra finita. | Insider ou comprometimento da preparação dos exemplos.                                                      | S2          |
+| P3  | Instruções em `prompts/nsl-kdd/jev.json` e níveis de `context.json`; `instructions_text` | Alteração das orientações para favorecer a categoria normal; `instructions=misleading` simula instruções enganosas.                                                      | Escrita na configuração ou comprometimento de sua origem.                                                   | S3          |
+| P4  | `jev_ids/records.py`, `complete_prediction`; política de avaliação de falhas             | Sem `p_attack`, o veredito registrado é `None`; a política de métricas considera a falha como normal, conforme documentação da função.                                   | Falha do processamento; provocar a falha intencionalmente exige capacidade adicional ainda não demonstrada. | S4          |
 
-Os níveis do código permitem simular adulterações, mas sua existência não prova que um adversário real tenha acesso aos componentes ou que o ataque funcione. P4 não é, por si só, uma vulnerabilidade do limiar 0,5: o problema é o tratamento da ausência de resposta.
+P1 corresponde à injeção indireta de prompt ([OWASP, 2025](https://genai.owasp.org/llmrisk/llm01-prompt-injection/); [NIST AI 100-2 E2025, seção 3.4](https://doi.org/10.6028/NIST.AI.100-2e2025)), e P2 ao envenenamento por troca de rótulos ([NIST AI 100-2 E2025, seção 2.3](https://doi.org/10.6028/NIST.AI.100-2e2025)). Os níveis do código permitem simular adulterações, mas sua existência não prova que um adversário real tenha acesso aos componentes ou que o ataque funcione. P4 não é, por si só, uma vulnerabilidade do limiar 0,5: o problema é o tratamento da ausência de resposta.
 
 ### Diagrama de superfície de ataque
 
@@ -249,12 +324,12 @@ Fonte: `diagramas/superficie-de-ataque.mmd`. P1 pertence à interação principa
 
 ### Cenários de ameaça
 
-| ID | Cenário | Ponto | Pressuposto | Ativo |
-|---|---|---|---|---|
-| A1 | Um atacante simulado pode inserir uma nota em `service`, aproveitando a interpretação de dados como instruções, causando ausência de alerta sobre um registro malicioso. | P1 | S1 | AT1 |
-| A2 | Um insider pode adulterar os rótulos dos exemplos, aproveitando a confiança em referências sem verificação de integridade, causando decisões incorretas sobre registros maliciosos ou legítimos. | P2 | S2 | AT1, AT2, AT4 |
-| A3 | Um insider ou fornecedor comprometido pode alterar as instruções carregadas, aproveitando a confiança na configuração, causando uma tendência indevida de classificar ataques como normais. | P3 | S3 | AT1, AT2 |
-| A4 | Um adversário com capacidade de provocar falhas pode explorar a política que trata ausência de resposta como normal, causando subcontagem de ataques e perda de confiabilidade da avaliação. Essa capacidade não é presumida para o atacante principal. | P4 | S4 | AT1, AT3 |
+| ID  | Cenário de ameaça                                                                                                                                                                                                                                       | Ponto de exploração | Pressuposto ou fraqueza | Ativo afetado |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- | ----------------------- | ------------- |
+| A1  | Um atacante simulado pode inserir uma nota em `service`, aproveitando a interpretação de dados como instruções, causando ausência de alerta sobre um registro malicioso.                                                                                | P1                  | S1                      | AT1           |
+| A2  | Um insider pode adulterar os rótulos dos exemplos, aproveitando a confiança em referências sem verificação de integridade, causando decisões incorretas sobre registros maliciosos ou legítimos.                                                        | P2                  | S2                      | AT1, AT2, AT4 |
+| A3  | Um insider ou fornecedor comprometido pode alterar as instruções carregadas, aproveitando a confiança na configuração, causando uma tendência indevida de classificar ataques como normais.                                                             | P3                  | S3                      | AT1, AT2      |
+| A4  | Um adversário com capacidade de provocar falhas pode explorar a política que trata ausência de resposta como normal, causando subcontagem de ataques e perda de confiabilidade da avaliação. Essa capacidade não é presumida para o atacante principal. | P4                  | S4                      | AT1, AT3      |
 
 ### Método de avaliação
 
@@ -264,12 +339,12 @@ Escala qualitativa de probabilidade: **1**, acesso adicional restrito ou capacid
 
 ### Matriz de risco
 
-| ID | Ponto | Pressuposto | Ativo | P | I | R | Justificativa de P | Justificativa de I |
-|---|---|---|---|---:|---:|---:|---|---|
-| A1 | P1 | S1 | AT1 | 2 | 3 | 6 | A nota pode ser submetida pelo atacante principal, mas sua eficácia depende do detector. | Uma evasão compromete a detecção de um registro malicioso. |
-| A2 | P2 | S2 | AT1, AT2, AT4 | 1 | 3 | 3 | Exige acesso aos exemplos, fora das capacidades do atacante principal. | Referências adulteradas podem influenciar várias decisões e falsos alarmes. |
-| A3 | P3 | S3 | AT1, AT2 | 1 | 3 | 3 | Exige escrita na configuração ou comprometimento de sua origem. | Instruções adulteradas podem influenciar todas as avaliações que as reutilizam. |
-| A4 | P4 | S4 | AT1, AT3 | 1 | 3 | 3 | Não foi demonstrado que o adversário consiga provocar falhas de processamento. | Falhas consideradas normais podem ocultar ataques na avaliação e comprometer sua confiabilidade. |
+| ID  | Ponto de exploração | Pressuposto ou fraqueza | Ativo afetado | Probabilidade | Impacto | Risco | Justificativa da probabilidade                                                           | Justificativa do impacto                                                                         |
+| --- | ------------------- | ----------------------- | ------------- | ------------: | ------: | ----: | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| A1  | P1                  | S1                      | AT1           |             2 |       3 |     6 | A nota pode ser submetida pelo atacante principal, mas sua eficácia depende do detector. | Uma evasão compromete a detecção de um registro malicioso.                                       |
+| A2  | P2                  | S2                      | AT1, AT2, AT4 |             1 |       3 |     3 | Exige acesso aos exemplos, fora das capacidades do atacante principal.                   | Referências adulteradas podem influenciar várias decisões e falsos alarmes.                      |
+| A3  | P3                  | S3                      | AT1, AT2      |             1 |       3 |     3 | Exige escrita na configuração ou comprometimento de sua origem.                          | Instruções adulteradas podem influenciar todas as avaliações que as reutilizam.                  |
+| A4  | P4                  | S4                      | AT1, AT3      |             1 |       3 |     3 | Não foi demonstrado que o adversário consiga provocar falhas de processamento.           | Falhas consideradas normais podem ocultar ataques na avaliação e comprometer sua confiabilidade. |
 
 ### Ameaça prioritária
 
@@ -294,13 +369,13 @@ A inspeção dos arquivos do ZIP `Jev-ids-adversarial-Developer (1).zip` confirm
 
 ## 4. Arquitetura planejada e continuidade
 
-| Componente | Situação | Entrada → saída |
-|---|---|---|
-| Detectores e mecanismos de contexto do Jev IDS | Existentes na base; integrações locais precisam ser verificadas. | Registro, instruções e exemplos → resposta do detector. |
-| Atacante caixa-preta | Proposto pelo grupo. | Vereditos próprios e orçamento → nota ou retirada da nota. |
-| Defensor adaptativo | Proposto pelo grupo. | Resultados autorizados de desenvolvimento → instruções revisadas. |
-| Orquestrador | Proposto pelo grupo. | Configuração e agentes → sequência de rodadas e observações separadas. |
-| Avaliador e log | Métricas e registros existem na base; separação por agente e rodada é proposta. | Predições e gabarito reservado → métricas, custos e log. |
+| Componente                                     | Situação                                                                        | Entrada → saída                                                        |
+| ---------------------------------------------- | ------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| Detectores e mecanismos de contexto do Jev IDS | Existentes na base; integrações locais precisam ser verificadas.                | Registro, instruções e exemplos → resposta do detector.                |
+| Atacante caixa-preta                           | Proposto pelo grupo.                                                            | Vereditos próprios e orçamento → nota ou retirada da nota.             |
+| Defensor adaptativo                            | Proposto pelo grupo.                                                            | Resultados autorizados de desenvolvimento → instruções revisadas.      |
+| Orquestrador                                   | Proposto pelo grupo.                                                            | Configuração e agentes → sequência de rodadas e observações separadas. |
+| Avaliador e log                                | Métricas e registros existem na base; separação por agente e rodada é proposta. | Predições e gabarito reservado → métricas, custos e log.               |
 
 ![Arquitetura planejada](diagramas/arquitetura-planejada.png)
 
@@ -310,24 +385,42 @@ O diagrama mostra os cinco componentes da tabela em operação e deixa explícit
 
 A revisão das instruções atua antes da montagem da entrada do detector. A avaliação acompanha taxa de evasão nos registros maliciosos, F1, recall, falsos alarmes sobre registros legítimos, falhas e custo/latência. Falhas devem ser reportadas separadamente de classificações válidas. O futuro enunciado do Trabalho 2 poderá exigir ajustes nesta arquitetura.
 
-## 5. Origem, referências e uso de IA
+## 5. Fechamento: pergunta final
+
+> Depois que o sistema responder, o que o outro lado aprenderá e tentará fazer em seguida?
+
+**Depois que o defensor reforça as instruções**, o atacante aprende apenas pelos próprios vereditos: se tentativas com nota passam a gerar alerta, ele infere que a nota perdeu efeito, mesmo sem ver as instruções. Em seguida, tentará reformular a nota, por exemplo trocando a alegação de autoridade, ou retirá-la e atacar sem nota (R2 → R3 da seção 3.3).
+
+**Depois que o atacante retira a nota**, o defensor aprende pelos resultados autorizados que o reforço deixou de trazer benefício, mas continua custando processamento, latência e possíveis falsos alarmes. Em seguida, tentará aliviar o custo, voltando às instruções básicas, o que reabre espaço para a nota (R3 → R4 → R1).
+
+Cada resposta, portanto, revela informação ao outro lado, e nenhuma defesa encerra o ciclo. Isso coincide com o equilíbrio misto da seção 3.2: nenhum lado tem uma escolha fixa que seja sempre a melhor. O que o defensor pode controlar é a observabilidade: registrar versão das instruções, notas testadas, vereditos, falhas e custos por rodada para perceber a próxima adaptação, sem entregar ao atacante mais do que o veredito.
+
+## 6. Origem, referências e uso de IA
 
 O Jev IDS fornece a base de detectores, contextos, registros e métricas. O grupo propõe a separação de observações e o ciclo entre atacante caixa-preta e defensor adaptativo. A inspeção do código não equivale à validação experimental das ameaças.
 
-Referências fornecidas no material do grupo:
+Referências citadas no relatório. A lista completa, com o que cada fonte sustenta e onde é citada, está em [`fontes/referencias.md`](fontes/referencias.md).
 
 - Projeto Jev IDS: https://github.com/Tucelos/Jev-ids-adversarial (branch Developer; registrar o commit efetivamente utilizado antes da entrega).
 - Documentação Jev: https://docs.typesafe.ai/introduction.
 - Modelo Qwen3-8B: https://huggingface.co/Qwen/Qwen3-8B.
 - Ollama: https://docs.ollama.com/.
 - Laya: https://huggingface.co/convaiinnovations/laya.
+- TAVALLAEE, M.; BAGHERI, E.; LU, W.; GHORBANI, A. A. A detailed analysis of the KDD CUP 99 data set. IEEE CISDA, 2009. https://doi.org/10.1109/CISDA.2009.5356528.
+- Canadian Institute for Cybersecurity (UNB). NSL-KDD dataset. https://www.unb.ca/cic/datasets/nsl.html.
+- OWASP Foundation. LLM01:2025 Prompt Injection. https://genai.owasp.org/llmrisk/llm01-prompt-injection/.
+- GRESHAKE, K. et al. Not what you've signed up for: Compromising Real-World LLM-Integrated Applications with Indirect Prompt Injection. arXiv:2302.12173, 2023. https://doi.org/10.48550/arXiv.2302.12173.
+- VASSILEV, A. et al. Adversarial Machine Learning: A Taxonomy and Terminology of Attacks and Mitigations. NIST AI 100-2 E2025, 2025. https://doi.org/10.6028/NIST.AI.100-2e2025.
+- NASH, J. Non-Cooperative Games. Annals of Mathematics, v. 54, n. 2, p. 286-295, 1951. https://doi.org/10.2307/1969529.
+- BIGGIO, B.; ROLI, F. Wild patterns: Ten years after the rise of adversarial machine learning. Pattern Recognition, v. 84, p. 317-331, 2018. https://doi.org/10.1016/j.patcog.2018.07.023.
+- Disciplina AL2268 Engenharia de Software Adversarial, Unipampa, 2026/2: transcrições das Aulas 4 e 5.
 - Instruções de entrega encaminhadas pelo professor: modelo estático, dinâmico, ameaças e riscos; relatório Markdown, PDF dos slides e vídeo no YouTube.
-
-A referência original do NSL-KDD e os materiais específicos da disciplina devem ser acrescentados pelo responsável pelas fontes. Os links acima foram preservados do material enviado, sem nova validação externa nesta edição.
 
 **Declaração desta edição:** houve apoio de IA na redação dos pressupostos, modelagem ilustrativa, cenários e organização do relatório. Os mecanismos de contexto e registro foram inspecionados no código fornecido. Os payoffs, rodadas e notas de risco são propostas para revisão do grupo, não resultados de experimentos deste trabalho. A exceção está na seção 3.3, que cita medições preliminares de um estudo paralelo sobre a base do Jev IDS, feitas com um terceiro detector (Nimble 9B) e identificadas como tais no texto; elas indicam ordem de grandeza e direção, e não substituem a avaliação de Qwen e Laya, ainda pendente. Cada integrante deve registrar seu próprio uso de IA e sua verificação.
 
-## 6. Entrega e contribuições
+**Amanda:** IA generativa (Claude, da Anthropic) foi usada para levantar fontes, calcular o equilíbrio em estratégia mista, montar a análise de sensibilidade dos payoffs e redigir o glossário e o fechamento. Verificação: cada fonte externa foi aberta e o trecho que ela sustenta foi conferido no original (seção ou linha indicada em `fontes/referencias.md`); os metadados bibliográficos foram conferidos no Crossref; o cálculo do equilíbrio e os equilíbrios de cada hipótese da análise de sensibilidade foram refeitos por script.
+
+## 7. Entrega e contribuições
 
 - Relatório principal: este README.
 - PDF dos slides: **link pendente**.
@@ -335,13 +428,13 @@ A referência original do NSL-KDD e os materiais específicos da disciplina deve
 - Prazo informado: **06/10/2026 às 23h59**.
 - Gravação preferencial no Canva. Integrantes do PPGES terão o vídeo exibido ao vivo e poderão responder perguntas; graduação responderá de forma assíncrona conforme solicitação docente.
 
-| Integrante | Parte atribuída na divisão | Registro de contribuição |
-|---|---|---|
-| Wagner | Sistema, contexto e integração. | Acrescentar commits/PRs e trecho do vídeo. |
-| Membro 2 | Modelo estático e organização. | Confirmar nome e acrescentar commits/PRs. |
-| Tuigg | Modelo dinâmico e vídeo. | Seção 3.3, diagrama do ciclo adaptativo e diagrama da arquitetura planejada. Coordena montagem e publicação do vídeo. |
-| Camilla | Superfície de ataque, cenários e riscos. | Acrescentar PR da branch camilladev e trecho do vídeo. |
-| Membro 5 | Resposta, efeitos colaterais e risco residual. | Confirmar nome e revisar a proposta desta edição. |
-| Pietra | Arquitetura e apresentação. | Acrescentar commits/PRs e links finais. |
+| Integrante | Parte atribuída na divisão                     | Registro de contribuição                                                                                                                                          |
+| ---------- | ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Wagner     | Sistema, contexto e integração.                | Acrescentar commits/PRs e trecho do vídeo.                                                                                                                        |
+| Amanda     | Modelo estático e organização.                 | Branch `amanda`: fontes e referências, citações nas seções, equilíbrio misto e análise de sensibilidade da 3.2, glossário, fechamento e padronização das tabelas. |
+| Tuigg      | Modelo dinâmico e vídeo.                       | Seção 3.3, diagrama do ciclo adaptativo e diagrama da arquitetura planejada. Coordena montagem e publicação do vídeo.                                             |
+| Camilla    | Superfície de ataque, cenários e riscos.       | Acrescentar PR da branch camilladev e trecho do vídeo.                                                                                                            |
+| Membro 5   | Resposta, efeitos colaterais e risco residual. | Confirmar nome e revisar a proposta desta edição.                                                                                                                 |
+| Pietra     | Arquitetura e apresentação.                    | Acrescentar commits/PRs e links finais.                                                                                                                           |
 
 Antes de submeter, o grupo deve revisar as propostas estática, dinâmica e de resiliência, completar nomes, referências e links, exportar os diagramas de contexto e ciclo em PNG com fontes editáveis e conferir permissões de acesso ao PDF e vídeo. Esta versão não declara essas pendências concluídas.
