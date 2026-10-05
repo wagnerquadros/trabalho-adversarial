@@ -167,6 +167,25 @@ Não plenamente. A célula N/B, em que a nota pode evadir a detecção, ainda oc
 
 A ausência de equilíbrio puro e a necessidade de imprevisibilidade motivam examinar adaptações sucessivas na seção 3.3. Isso não prova que o sistema real percorrerá esse ciclo: as probabilidades dependem dos payoffs hipotéticos e precisam ser revistas quando houver medidas com Qwen e Laya.
 
+### Análise de sensibilidade: o que acontece se um payoff estiver errado?
+
+Os payoffs são estimativas. Para saber quais conclusões resistem a erros nessas estimativas, basta observar que o ciclo de melhores respostas depende de **quatro comparações**, uma por seta do ciclo. Se as quatro valem, nenhuma célula é equilíbrio puro. Se uma delas falha, o ciclo se rompe naquela seta e uma célula específica vira equilíbrio puro. Cada comparação corresponde a uma hipótese sobre o sistema. Na tabela, A(x, y) e D(x, y) são os payoffs do atacante e do defensor na célula x/y.
+
+| Hipótese                                             | Comparação (valores atuais) | Se for falsa, vira equilíbrio puro | O que isso significaria                                                                                                         | Métrica que a testaria no Trabalho 2                                                                                            |
+| ---------------------------------------------------- | --------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| H1: a nota engana o detector com instruções básicas. | A(N, B) > A(S, B) (3 > 1)   | S/B                                | A nota não traz vantagem; o atacante desiste dela e o defensor não precisa reforçar. A1 perde prioridade na 3.4.                | Taxa de evasão de registros maliciosos com nota e sem nota, ambos com instruções básicas.                                       |
+| H2: uma nota que falha custa algo ao atacante.       | A(S, R) > A(N, R) (1 > 0)   | N/R                                | O atacante mantém a nota sempre e o defensor reforça sempre. Não há corrida, mas o custo do reforço vira permanente.            | Taxa de evasão com nota e sem nota, ambos com instruções reforçadas; consumo do orçamento de tentativas pelas notas que falham. |
+| H3: o reforço neutraliza a nota.                     | D(N, R) > D(N, B) (2 > 0)   | N/B                                | A defesa não funciona; o atacante evade com nota e o defensor não tem resposta dentro do recorte. É o pior caso para o sistema. | Taxa de evasão com nota, comparando instruções básicas e reforçadas.                                                            |
+| H4: reforçar sem necessidade custa algo ao defensor. | D(S, B) > D(S, R) (3 > 1)   | S/R                                | O defensor reforça sempre e o atacante desiste da nota. O ciclo para a favor do defensor.                                       | Falsos alarmes sobre os registros legítimos, recall sem nota, latência e tokens, comparando instruções básicas e reforçadas.    |
+
+Três conclusões saem da tabela:
+
+1. **O ciclo da 3.2 e a corrida armamentista da 3.3 não são garantidos.** Eles existem somente se H1 a H4 forem verdadeiras ao mesmo tempo. Basta uma falhar para o jogo se estabilizar numa célula.
+2. **Nem todas as falhas são iguais.** Se H3 falhar, o sistema fica no pior caso (N/B) e a resposta proposta para A1 na seção 3.4 precisa ser substituída. Se H4 falhar, o defensor ganha: reforçar passa a ser sempre a melhor escolha. H3 é, portanto, a hipótese que mais importa medir primeiro.
+3. **No equilíbrio misto, a frequência com que o defensor reforça depende só dos payoffs do atacante, e vice-versa.** O valor _q_ = 1/3 saiu da indiferença do atacante (3_q_ = 1). Se a nota rendesse mais ao atacante em N/B, o defensor precisaria usar B ainda menos vezes. O defensor não escolhe essa frequência pelos próprios custos, e sim pelo quanto a nota vale para o adversário.
+
+As quatro métricas da tabela usam somente informações que o avaliador já produz (vereditos, gabarito reservado, falhas, tempo e tokens). Por isso podem ser medidas no Trabalho 2 sem dar ao atacante acesso a nada além do veredito.
+
 ## 3.3 Modelo estratégico dinâmico
 
 ### Rodadas propostas
