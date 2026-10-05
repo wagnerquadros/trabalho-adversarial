@@ -175,7 +175,7 @@ A ausência de equilíbrio puro e a necessidade de imprevisibilidade motivam exa
 
 As rodadas abaixo são um cenário de planejamento, não um histórico de execuções. Uma transição ocorre somente se as observações previstas aparecerem. Cada modelo deve ser avaliado separadamente.
 
-| Rodada | Ação do atacante | Resposta do defensor | Observação autorizada | Adaptação seguinte |
+| Rodada | Ação do participante | Resposta do sistema ou defensor | O que se torna observável? | Adaptação para a rodada seguinte |
 |---|---|---|---|---|
 | R1 — N/B | Envia registro malicioso com nota. | Mantém instruções básicas. | Atacante recebe o próprio veredito; avaliador pode informar ao defensor uma evasão e a nota correspondente. | Se houver evasão atribuível à nota, o defensor passa a R. |
 | R2 — N/R | Mantém inicialmente a nota para sondar o novo comportamento. | Usa instruções reforçadas. | Atacante observa alerta, se a defesa funcionar; defensor acompanha detecção, falhas e falsos alarmes em registros legítimos. | Se a nota perder utilidade, o atacante a retira, passando a S. |
@@ -244,7 +244,7 @@ Fonte: `diagramas/superficie-de-ataque.mmd`. P1 pertence à interação principa
 
 ### Cenários de ameaça
 
-| ID | Cenário | Ponto | Pressuposto | Ativo |
+| ID | Cenário de ameaça | Ponto de exploração | Pressuposto ou fraqueza | Ativo afetado |
 |---|---|---|---|---|
 | A1 | Um atacante simulado pode inserir uma nota em `service`, aproveitando a interpretação de dados como instruções, causando ausência de alerta sobre um registro malicioso. | P1 | S1 | AT1 |
 | A2 | Um insider pode adulterar os rótulos dos exemplos, aproveitando a confiança em referências sem verificação de integridade, causando decisões incorretas sobre registros maliciosos ou legítimos. | P2 | S2 | AT1, AT2, AT4 |
@@ -259,7 +259,7 @@ Escala qualitativa de probabilidade: **1**, acesso adicional restrito ou capacid
 
 ### Matriz de risco
 
-| ID | Ponto | Pressuposto | Ativo | P | I | R | Justificativa de P | Justificativa de I |
+| ID | Ponto de exploração | Pressuposto ou fraqueza | Ativo afetado | Probabilidade | Impacto | Risco | Justificativa da probabilidade | Justificativa do impacto |
 |---|---|---|---|---:|---:|---:|---|---|
 | A1 | P1 | S1 | AT1 | 2 | 3 | 6 | A nota pode ser submetida pelo atacante principal, mas sua eficácia depende do detector. | Uma evasão compromete a detecção de um registro malicioso. |
 | A2 | P2 | S2 | AT1, AT2, AT4 | 1 | 3 | 3 | Exige acesso aos exemplos, fora das capacidades do atacante principal. | Referências adulteradas podem influenciar várias decisões e falsos alarmes. |
