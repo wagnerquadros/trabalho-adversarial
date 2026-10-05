@@ -332,6 +332,8 @@ Referências citadas no relatório. A lista completa, com o que cada fonte suste
 
 **Declaração desta edição:** houve apoio de IA na redação dos pressupostos, modelagem ilustrativa, cenários e organização do relatório. Os mecanismos de contexto e registro foram inspecionados no código fornecido. Os payoffs, rodadas e notas de risco são propostas para revisão do grupo, não resultados de experimentos. Cada integrante deve registrar seu próprio uso de IA e sua verificação.
 
+**Amanda:** IA generativa (Claude, da Anthropic) foi usada para levantar fontes, calcular o equilíbrio em estratégia mista e redigir o glossário e o fechamento. Verificação: cada fonte externa foi aberta e o trecho que ela sustenta foi conferido no original (seção ou linha indicada em `fontes/referencias.md`); os metadados bibliográficos foram conferidos no Crossref; o cálculo do equilíbrio foi refeito por script com frações exatas.
+
 ## 7. Entrega e contribuições
 
 - Relatório principal: este README.
@@ -343,7 +345,7 @@ Referências citadas no relatório. A lista completa, com o que cada fonte suste
 | Integrante | Parte atribuída na divisão | Registro de contribuição |
 |---|---|---|
 | Wagner | Sistema, contexto e integração. | Acrescentar commits/PRs e trecho do vídeo. |
-| Membro 2 | Modelo estático e organização. | Confirmar nome e acrescentar commits/PRs. |
+| Amanda | Modelo estático e organização. | Branch `amanda`: fontes e referências, citações nas seções, equilíbrio misto da 3.2, glossário, fechamento e padronização das tabelas. |
 | Membro 3 | Modelo dinâmico e vídeo. | Confirmar nome e acrescentar commits/PRs. |
 | Camilla | Superfície de ataque, cenários e riscos. | Acrescentar PR da branch camilladev e trecho do vídeo. |
 | Membro 5 | Resposta, efeitos colaterais e risco residual. | Confirmar nome e revisar a proposta desta edição. |
