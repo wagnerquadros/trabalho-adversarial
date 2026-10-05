@@ -2,6 +2,31 @@
 
 ### Um atacante manipula o que o detector lê para não ser alertado; o defensor observa os erros e endurece o contexto; os dois se adaptam rodada a rodada
 
+## Glossário
+
+| Termo | Significado neste trabalho |
+| --- | --- |
+| Registro de conexão (fluxo) | Linha do NSL-KDD que descreve uma conexão de rede por 41 atributos, como protocolo, `service` e bytes. É o que o detector julga. |
+| Contexto | Tudo o que acompanha o registro na entrada do detector: instruções, descrições dos atributos, exemplos rotulados e forma de apresentação. |
+| Instruções | Texto que explica a tarefa ao detector. É a única parte do contexto que o defensor pode revisar. |
+| Nota | Texto que o atacante anexa ao valor do campo `service` para tentar influenciar o veredito. |
+| Exemplo rotulado | Registro de referência com a categoria correta, mostrado ao detector como modelo. |
+| `p_attack` | Probabilidade de ataque devolvida pelo detector, entre 0 e 1. |
+| Limiar | Valor de corte de `p_attack`: 0,5. A partir dele, o registro gera alerta. |
+| Veredito | Resultado final de um registro: alerta ou sem alerta. |
+| Falso alarme | Alerta emitido sobre um registro legítimo. |
+| F1 | Medida de desempenho que combina precisão (alertas corretos entre todos os alertas) e revocação (ataques detectados entre todos os ataques). |
+| Evasão | Registro malicioso que recebe o veredito sem alerta. |
+| Sonda | Tentativa que o atacante envia para observar o veredito e aprender como o detector reage. |
+| Rodada | Um ciclo de ação, resposta, observação e adaptação entre atacante e defensor. |
+| Payoff | Número que representa a preferência de um jogador por um resultado do jogo. |
+| Melhor resposta | Ação que dá ao jogador o maior payoff diante de uma escolha fixa do outro jogador. |
+| Equilíbrio de Nash | Combinação de ações em que nenhum jogador melhora mudando sozinho. |
+| Estratégia mista | Escolha de ações por sorteio, com probabilidades definidas. |
+| Insider | Pessoa com acesso interno a componentes, como exemplos ou arquivos de instruções. |
+| Oráculo | Fonte que revela ao atacante uma medida que ele não teria na prática, como o F1 da avaliação. |
+| Fail-open | Política em que uma falha de processamento é tratada como "sem alerta". |
+
 ## 1. Proposta
 
 Um atacante simulado modifica o texto apresentado ao Jev para tentar evitar a detecção; o defensor observa os erros e revisa as instruções. Ambos adaptam suas escolhas a partir das respostas que podem observar.
