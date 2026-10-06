@@ -1,0 +1,84 @@
+"""The Prediction row and the three files of a run.
+
+A Prediction is a plain dict, one line of `results/<run_id>/predictions.jsonl`.
+In reading order:
+
+- `complete_prediction`: joins what a Detector measured with what only the run loop knows (the cell, the Flow's truth, the Verdict, a
+  request id and a timestamp) into one row.
+- `write_config`, `append_prediction`, `read_predictions`: the run directory and its `config.json`, `predictions.jsonl` and
+  `responses.jsonl`.
+
+A Detector's dict holds only what it measured (`p_attack`, `category_pred`, `latency_ms`, `usage`, `error`, ...), so rows of different
+Detectors carry different keys and a reader takes an optional key with `.get`. The key `raw`, the provider's whole answer, never reaches
+predictions.jsonl: it goes to responses.jsonl, which git ignores.
+"""
+
+import json
+import uuid
+from datetime import UTC, datetime
+from pathlib import Path
+from typing import Any
+
+from jev_ids.dataset import Flow
+
+# Every Detector takes its Verdict at the same point (CONTEXT.md, "Verdict"), so the threshold lives next to the field it fills and not
+# inside the detectors.
+VERDICT_THRESHOLD = 0.5
+
+Prediction = dict[str, Any]
+
+
+def complete_prediction(measured: dict[str, Any], flow: Flow, cell_fields: dict[str, Any]) -> Prediction:
+    """One row: the cell, the Flow's truth, the Verdict, then what was measured.
+
+    `is_attack`, `category_true` and `novel_attack` are copied from the Flow so the metrics never need the split file again.
+    `classification_verdict` is the Verdict at VERDICT_THRESHOLD, or None when the call failed and there is no p_attack; the metrics count
+    such a row as `normal` (fail-open). `request_id` is a client UUID that keys the raw answer in responses.jsonl.
+    """
+    p_attack = measured.get("p_attack")
+    return {
+        **cell_fields,
+        "row_id": flow.row_id,
+        "is_attack": int(flow.is_attack),
+        "classification_verdict": None if p_attack is None else int(p_attack >= VERDICT_THRESHOLD),
+        "category_true": flow.category,
+        "novel_attack": flow.novel_attack,
+        **measured,
+        "request_id": str(uuid.uuid4()),
+        "ts_utc": datetime.now(UTC).isoformat(timespec="milliseconds"),
+    }
+
+
+def write_config(run_dir: Path, config: dict[str, Any]) -> None:
+    """Create the run directory and write `config.json`, the trace of a run's inputs."""
+    run_dir.mkdir(parents=True, exist_ok=True)
+    text = json.dumps(config, indent=2, sort_keys=True, default=str) + "\n"
+    (run_dir / "config.json").write_text(text, encoding="utf-8")
+
+
+def append_prediction(run_dir: Path, prediction: Prediction) -> None:
+    """Append one row to predictions.jsonl and its raw answer to responses.jsonl.
+
+    A row is appended right after its call, not at the end of the run, so a crash or a quota error loses at most one Flow. A Detector
+    without a raw answer (the Random Forest) writes nothing to responses.jsonl.
+    """
+    run_dir.mkdir(parents=True, exist_ok=True)
+    row = {key: value for key, value in prediction.items() if key != "raw"}
+    with (run_dir / "predictions.jsonl").open("a", encoding="utf-8") as rows:
+        rows.write(json.dumps(row) + "\n")
+    if "raw" in prediction:
+        response = {
+            "request_id": prediction["request_id"],
+            "response": prediction["raw"],
+        }
+        with (run_dir / "responses.jsonl").open("a", encoding="utf-8") as responses:
+            responses.write(json.dumps(response) + "\n")
+
+
+def read_predictions(run_dir: Path) -> list[Prediction]:
+    """Every row of a run's predictions.jsonl; an absent file is an empty run."""
+    path = run_dir / "predictions.jsonl"
+    if not path.exists():
+        return []
+    with path.open(encoding="utf-8") as handle:
+        return [json.loads(line) for line in handle if line.strip()]
