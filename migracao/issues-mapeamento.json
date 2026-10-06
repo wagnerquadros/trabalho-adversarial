@@ -1,0 +1,346 @@
+{
+  "source": "Tucelos/Jev-ids-adversarial",
+  "target": "wagnerquadros/trabalho-adversarial",
+  "created_at": "2026-10-06T02:25:55.2401705Z",
+  "issues": [
+    {
+      "source_number": 1,
+      "target_number": 8,
+      "title": "[Decisão] Recorte da interação, atores, detector e glossário comum",
+      "source_url": "https://github.com/Tucelos/Jev-ids-adversarial/issues/1",
+      "target_url": "https://github.com/wagnerquadros/trabalho-adversarial/issues/8",
+      "source_state": "open",
+      "managed": true,
+      "assignees_copied": [
+        "Tucelos"
+      ],
+      "assignees_unavailable": []
+    },
+    {
+      "source_number": 2,
+      "target_number": 9,
+      "title": "[Setup] Pasta do relatório, fluxo de branches e PRs, commits que contam",
+      "source_url": "https://github.com/Tucelos/Jev-ids-adversarial/issues/2",
+      "target_url": "https://github.com/wagnerquadros/trabalho-adversarial/issues/9",
+      "source_state": "open",
+      "managed": true,
+      "assignees_copied": [
+        "amandadiasdev"
+      ],
+      "assignees_unavailable": []
+    },
+    {
+      "source_number": 3,
+      "target_number": 10,
+      "title": "[Setup] Esqueleto do relatório com as seções e tabelas do enunciado",
+      "source_url": "https://github.com/Tucelos/Jev-ids-adversarial/issues/3",
+      "target_url": "https://github.com/wagnerquadros/trabalho-adversarial/issues/10",
+      "source_state": "open",
+      "managed": true,
+      "assignees_copied": [
+        "amandadiasdev"
+      ],
+      "assignees_unavailable": []
+    },
+    {
+      "source_number": 4,
+      "target_number": 11,
+      "title": "[Fontes] Levantamento curto de referências para payoffs, rodadas e ameaças",
+      "source_url": "https://github.com/Tucelos/Jev-ids-adversarial/issues/4",
+      "target_url": "https://github.com/wagnerquadros/trabalho-adversarial/issues/11",
+      "source_state": "open",
+      "managed": true,
+      "assignees_copied": [
+        "amandadiasdev"
+      ],
+      "assignees_unavailable": []
+    },
+    {
+      "source_number": 5,
+      "target_number": 12,
+      "title": "[3.1] Descrição do sistema adversarial",
+      "source_url": "https://github.com/Tucelos/Jev-ids-adversarial/issues/5",
+      "target_url": "https://github.com/wagnerquadros/trabalho-adversarial/issues/12",
+      "source_state": "open",
+      "managed": true,
+      "assignees_copied": [],
+      "assignees_unavailable": []
+    },
+    {
+      "source_number": 6,
+      "target_number": 13,
+      "title": "[Diagrama] Diagrama de contexto",
+      "source_url": "https://github.com/Tucelos/Jev-ids-adversarial/issues/6",
+      "target_url": "https://github.com/wagnerquadros/trabalho-adversarial/issues/13",
+      "source_state": "open",
+      "managed": true,
+      "assignees_copied": [],
+      "assignees_unavailable": []
+    },
+    {
+      "source_number": 7,
+      "target_number": 14,
+      "title": "[3.2] Modelo estratégico estático (matriz 2×2)",
+      "source_url": "https://github.com/Tucelos/Jev-ids-adversarial/issues/7",
+      "target_url": "https://github.com/wagnerquadros/trabalho-adversarial/issues/14",
+      "source_state": "open",
+      "managed": true,
+      "assignees_copied": [
+        "amandadiasdev"
+      ],
+      "assignees_unavailable": []
+    },
+    {
+      "source_number": 8,
+      "target_number": 15,
+      "title": "[3.3] Modelo estratégico dinâmico (3+ rodadas)",
+      "source_url": "https://github.com/Tucelos/Jev-ids-adversarial/issues/8",
+      "target_url": "https://github.com/wagnerquadros/trabalho-adversarial/issues/15",
+      "source_state": "open",
+      "managed": true,
+      "assignees_copied": [],
+      "assignees_unavailable": []
+    },
+    {
+      "source_number": 9,
+      "target_number": 16,
+      "title": "[Diagrama] Ciclo adaptativo",
+      "source_url": "https://github.com/Tucelos/Jev-ids-adversarial/issues/9",
+      "target_url": "https://github.com/wagnerquadros/trabalho-adversarial/issues/16",
+      "source_state": "open",
+      "managed": true,
+      "assignees_copied": [],
+      "assignees_unavailable": []
+    },
+    {
+      "source_number": 10,
+      "target_number": 17,
+      "title": "[3.4] Pontos de exploração e diagrama de superfície de ataque",
+      "source_url": "https://github.com/Tucelos/Jev-ids-adversarial/issues/10",
+      "target_url": "https://github.com/wagnerquadros/trabalho-adversarial/issues/17",
+      "source_state": "open",
+      "managed": true,
+      "assignees_copied": [
+        "camillabdt"
+      ],
+      "assignees_unavailable": []
+    },
+    {
+      "source_number": 11,
+      "target_number": 18,
+      "title": "[3.4] Cenários de ameaça e matriz de risco",
+      "source_url": "https://github.com/Tucelos/Jev-ids-adversarial/issues/11",
+      "target_url": "https://github.com/wagnerquadros/trabalho-adversarial/issues/18",
+      "source_state": "open",
+      "managed": true,
+      "assignees_copied": [
+        "camillabdt"
+      ],
+      "assignees_unavailable": []
+    },
+    {
+      "source_number": 12,
+      "target_number": 19,
+      "title": "[3.4] Ameaça prioritária: resposta, adaptação e risco residual",
+      "source_url": "https://github.com/Tucelos/Jev-ids-adversarial/issues/12",
+      "target_url": "https://github.com/wagnerquadros/trabalho-adversarial/issues/19",
+      "source_state": "open",
+      "managed": true,
+      "assignees_copied": [
+        "lararios27"
+      ],
+      "assignees_unavailable": []
+    },
+    {
+      "source_number": 13,
+      "target_number": 20,
+      "title": "[Arquitetura] O que existe × o que implementaremos no T2",
+      "source_url": "https://github.com/Tucelos/Jev-ids-adversarial/issues/13",
+      "target_url": "https://github.com/wagnerquadros/trabalho-adversarial/issues/20",
+      "source_state": "open",
+      "managed": true,
+      "assignees_copied": [
+        "lararios27"
+      ],
+      "assignees_unavailable": []
+    },
+    {
+      "source_number": 14,
+      "target_number": 21,
+      "title": "[Evidência] (opcional) Números do repositório e do estudo de contexto",
+      "source_url": "https://github.com/Tucelos/Jev-ids-adversarial/issues/14",
+      "target_url": "https://github.com/wagnerquadros/trabalho-adversarial/issues/21",
+      "source_state": "open",
+      "managed": true,
+      "assignees_copied": [],
+      "assignees_unavailable": []
+    },
+    {
+      "source_number": 15,
+      "target_number": 22,
+      "title": "[Seção] Glossário, frase-tese e fechamento (pergunta final do §7)",
+      "source_url": "https://github.com/Tucelos/Jev-ids-adversarial/issues/15",
+      "target_url": "https://github.com/wagnerquadros/trabalho-adversarial/issues/22",
+      "source_state": "open",
+      "managed": true,
+      "assignees_copied": [],
+      "assignees_unavailable": []
+    },
+    {
+      "source_number": 16,
+      "target_number": 23,
+      "title": "[Fontes] Referências, declaração de IA e contribuições",
+      "source_url": "https://github.com/Tucelos/Jev-ids-adversarial/issues/16",
+      "target_url": "https://github.com/wagnerquadros/trabalho-adversarial/issues/23",
+      "source_state": "open",
+      "managed": true,
+      "assignees_copied": [],
+      "assignees_unavailable": []
+    },
+    {
+      "source_number": 17,
+      "target_number": 24,
+      "title": "[Revisão] Consistência final e checklist do enunciado",
+      "source_url": "https://github.com/Tucelos/Jev-ids-adversarial/issues/17",
+      "target_url": "https://github.com/wagnerquadros/trabalho-adversarial/issues/24",
+      "source_state": "open",
+      "managed": true,
+      "assignees_copied": [],
+      "assignees_unavailable": []
+    },
+    {
+      "source_number": 18,
+      "target_number": 25,
+      "title": "[Apresentação] Slides no Canva e PDF no Drive",
+      "source_url": "https://github.com/Tucelos/Jev-ids-adversarial/issues/18",
+      "target_url": "https://github.com/wagnerquadros/trabalho-adversarial/issues/25",
+      "source_state": "open",
+      "managed": true,
+      "assignees_copied": [],
+      "assignees_unavailable": []
+    },
+    {
+      "source_number": 19,
+      "target_number": 26,
+      "title": "[Apresentação] Gravação, publicação do vídeo e submissão",
+      "source_url": "https://github.com/Tucelos/Jev-ids-adversarial/issues/19",
+      "target_url": "https://github.com/wagnerquadros/trabalho-adversarial/issues/26",
+      "source_state": "open",
+      "managed": true,
+      "assignees_copied": [],
+      "assignees_unavailable": []
+    },
+    {
+      "source_number": 20,
+      "target_number": 27,
+      "title": "[T2] Replanejar as issues provisórias quando sair o enunciado do Trabalho 2",
+      "source_url": "https://github.com/Tucelos/Jev-ids-adversarial/issues/20",
+      "target_url": "https://github.com/wagnerquadros/trabalho-adversarial/issues/27",
+      "source_state": "open",
+      "managed": true,
+      "assignees_copied": [],
+      "assignees_unavailable": []
+    },
+    {
+      "source_number": 21,
+      "target_number": 28,
+      "title": "[T2] Consolidar a base: `Developer` na `main`, tag `t1-entrega` e ambiente para todos",
+      "source_url": "https://github.com/Tucelos/Jev-ids-adversarial/issues/21",
+      "target_url": "https://github.com/wagnerquadros/trabalho-adversarial/issues/28",
+      "source_state": "open",
+      "managed": true,
+      "assignees_copied": [],
+      "assignees_unavailable": []
+    },
+    {
+      "source_number": 22,
+      "target_number": 29,
+      "title": "[T2] Orquestrador de rodadas e log de observações",
+      "source_url": "https://github.com/Tucelos/Jev-ids-adversarial/issues/22",
+      "target_url": "https://github.com/wagnerquadros/trabalho-adversarial/issues/29",
+      "source_state": "open",
+      "managed": true,
+      "assignees_copied": [],
+      "assignees_unavailable": []
+    },
+    {
+      "source_number": 23,
+      "target_number": 30,
+      "title": "[T2] Atacante caixa-preta (só vê vereditos)",
+      "source_url": "https://github.com/Tucelos/Jev-ids-adversarial/issues/23",
+      "target_url": "https://github.com/wagnerquadros/trabalho-adversarial/issues/30",
+      "source_state": "open",
+      "managed": true,
+      "assignees_copied": [],
+      "assignees_unavailable": []
+    },
+    {
+      "source_number": 24,
+      "target_number": 31,
+      "title": "[T2] Controles do defensor (validação, detecção de texto estranho, fail-closed)",
+      "source_url": "https://github.com/Tucelos/Jev-ids-adversarial/issues/24",
+      "target_url": "https://github.com/wagnerquadros/trabalho-adversarial/issues/31",
+      "source_state": "open",
+      "managed": true,
+      "assignees_copied": [],
+      "assignees_unavailable": []
+    },
+    {
+      "source_number": 25,
+      "target_number": 32,
+      "title": "[T2] Defensor adaptativo",
+      "source_url": "https://github.com/Tucelos/Jev-ids-adversarial/issues/25",
+      "target_url": "https://github.com/wagnerquadros/trabalho-adversarial/issues/32",
+      "source_state": "open",
+      "managed": true,
+      "assignees_copied": [],
+      "assignees_unavailable": []
+    },
+    {
+      "source_number": 26,
+      "target_number": 33,
+      "title": "[T2] Experimentos, métricas por rodada e previsto × observado",
+      "source_url": "https://github.com/Tucelos/Jev-ids-adversarial/issues/26",
+      "target_url": "https://github.com/wagnerquadros/trabalho-adversarial/issues/33",
+      "source_state": "open",
+      "managed": true,
+      "assignees_copied": [],
+      "assignees_unavailable": []
+    },
+    {
+      "source_number": 27,
+      "target_number": 34,
+      "title": "[T2] Relatório, crédito da base e tag de entrega",
+      "source_url": "https://github.com/Tucelos/Jev-ids-adversarial/issues/27",
+      "target_url": "https://github.com/wagnerquadros/trabalho-adversarial/issues/34",
+      "source_state": "open",
+      "managed": true,
+      "assignees_copied": [],
+      "assignees_unavailable": []
+    },
+    {
+      "source_number": 28,
+      "target_number": 35,
+      "title": "[T2] Slides, demo e vídeo",
+      "source_url": "https://github.com/Tucelos/Jev-ids-adversarial/issues/28",
+      "target_url": "https://github.com/wagnerquadros/trabalho-adversarial/issues/35",
+      "source_state": "open",
+      "managed": true,
+      "assignees_copied": [],
+      "assignees_unavailable": []
+    },
+    {
+      "source_number": 29,
+      "target_number": 36,
+      "title": "[3.2] Análise de sensibilidade dos payoffs e hipóteses a medir no T2",
+      "source_url": "https://github.com/Tucelos/Jev-ids-adversarial/issues/29",
+      "target_url": "https://github.com/wagnerquadros/trabalho-adversarial/issues/36",
+      "source_state": "open",
+      "managed": true,
+      "assignees_copied": [
+        "amandadiasdev"
+      ],
+      "assignees_unavailable": []
+    }
+  ]
+}
