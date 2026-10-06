@@ -413,7 +413,7 @@ Uma resposta sem `p_attack` (I6) é registrada como **falha** e reportada à par
 
 ### 4.3 Validação dos campos simbólicos
 
-A defesa reforçada (seção 3.2) e a resposta à ameaça A1 (seção 3.4) supõem que o sistema reconhece quando um campo deixou de conter um valor legítimo. O cartão do dataset informa apenas **quais** campos são simbólicos, não **quais valores** eles aceitam. Por isso, a validação precisa de quatro decisões explícitas:
+A defesa reforçada R (seção 3.2) e a resposta à ameaça A1 (seção 3.4) atuam somente nas instruções e não dependem de validação. O validador é uma peça de **observabilidade**: permite ao defensor e ao avaliador reconhecer quando um campo deixou de conter um valor legítimo, isto é, quando houve uma tentativa com nota. O cartão do dataset informa apenas **quais** campos são simbólicos, não **quais valores** eles aceitam. Por isso, a validação precisa de quatro decisões explícitas:
 
 1. **Campos validados:** os três listados em `symbolic` no cartão `data/nsl-kdd/dataset.json`: `protocol_type`, `service` e `flag`.
 2. **Origem do vocabulário:** os valores distintos de cada campo em `pool.csv`, a partição de treino (KDDTrain+) de onde a base retira os exemplos. A base já calcula exatamente esse vocabulário para o Random Forest, na função `vocabulary` de `jev_ids/detectors/random_forest.py`, que lê o pool inteiro; o validador reutiliza essa função e grava o resultado, com seu hash, no log de cada execução. O `test.csv` (KDDTest+), de onde vêm os registros avaliados, não entra no vocabulário.
