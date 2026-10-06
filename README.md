@@ -421,7 +421,9 @@ A conferência dos resultados existentes identificou, para o Jev com k = 1, méd
 
 Essas frequências não constituem estimativas de sucesso de A1, A2 ou A3: as execuções armazenadas não aplicaram `note=attacks`, `labels=flipped` ou `instructions=misleading`. Portanto, a matriz de risco e a reavaliação de A1 mantêm suas notas qualitativas. O acesso aos componentes e as capacidades necessárias continuam fundamentando a probabilidade; os resultados publicados apenas dão contexto à relevância do impacto e aos efeitos colaterais.
 
-Foi realizado o levantamento dos números publicados, conforme a alternativa da issue #21 de manter somente o primeiro item. Os ensaios opcionais por nível no recorte `pilot` não foram executados nesta contribuição. A conferência das medições do Nimble citadas na seção 3.3 também permanece separada: os arquivos de previsões desse estudo não estão incluídos entre os resultados importados e não foram recalculados aqui.
+A contribuição da issue #21 consistiu no levantamento e na conferência dos números publicados, conforme a alternativa de manter somente o primeiro item. Os ensaios opcionais por nível no recorte `pilot` não foram executados nesta contribuição. Esse levantamento contextualiza o detector original; não demonstra que a injeção proposta funciona nem fornece uma probabilidade de sucesso para ela. A #21 permanece como apoio opcional e não deve constituir dependência obrigatória da revisão final na #24.
+
+A conferência das medições do Nimble citadas na seção 3.3 também permanece separada: os arquivos de previsões desse estudo não estão incluídos entre os resultados importados e não foram recalculados aqui.
 
 ## 4. Arquitetura planejada e continuidade
 
