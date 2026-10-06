@@ -188,12 +188,36 @@ As quatro métricas da tabela usam somente informações que o avaliador já pro
 
 ### O que os números já publicados indicam
 
-O Jev IDS publicou resultados do Jev sobre o NSL-KDD, com 1.126 registros maliciosos e 874 legítimos por semente ([`docs/results.md`](https://github.com/Tucelos/Jev-ids-adversarial/blob/main/docs/results.md), commit `57fa123`). Eles não testam a nota, mas ajudam a calibrar dois payoffs:
+Os resultados publicados pelo Jev IDS foram conferidos em [`summary.csv`](jev-ids/results/paper/summary.csv) e recalculados a partir dos arquivos `predictions.jsonl` disponíveis entre as [previsões e configurações originais](jev-ids/results/paper/). O recorte `paper` contém 2.000 registros por semente: 1.126 maliciosos e 874 legítimos. Entre os maliciosos, 300 pertencem a tipos ausentes do conjunto de exemplos, definidos pela base como ataques zero-day. Foram consideradas as sementes 0, 1 e 2, com um exemplo por categoria (k = 1).
 
-- **Atacar sem nota já rende algo ao atacante.** Com um exemplo por categoria (k = 1), o recall sobre todos os ataques é 0,778: cerca de 22% dos registros maliciosos já passam sem alerta, sem nenhuma nota. Isso sustenta A(S, B) = A(S, R) = 1, e não 0.
-- **Mudar o contexto tem custo para os usuários legítimos, o que torna H4 plausível.** Passar de nenhum exemplo (k = 0) para um exemplo (k = 1) elevou o recall de 0,654 para 0,778, mas a precisão caiu de 0,972 para 0,953. Combinando recall, precisão e o total de ataques, os falsos alarmes passam de cerca de 21 para 43 em 874 registros legítimos; o valor 43 coincide com o publicado. O custo da API subiu de US$ 43 para US$ 74 por milhão de registros; a latência ficou estável (310 ms e 315 ms).
+| Detector      | F1 médio | Recall médio em ataques zero-day | Falsos alarmes médios / 874 legítimos | Taxa de falsos alarmes |
+| ------------- | -------: | -------------------------------: | ------------------------------------: | ---------------------: |
+| Jev           |    0,856 |                            0,747 |                                 43,33 |                  4,96% |
+| Gemini        |    0,880 |                            0,713 |                                 57,33 |                  6,56% |
+| Random Forest |    0,748 |                            1,000 |                                763,67 |                 87,38% |
 
-**Limites:** os números são do Jev, não do Qwen nem do Laya; a mudança medida foi no número de exemplos, não nas instruções; e nenhuma nota foi testada. Eles tornam as hipóteses plausíveis, mas não substituem as medidas da tabela acima.
+Os números **43, 57 e 764** citados na issue #21 são arredondamentos das médias de falsos alarmes. As contagens nas sementes 0, 1 e 2 foram, respectivamente, **57, 36 e 37** para o Jev; **49, 69 e 54** para o Gemini; e **874, 606 e 811** para o Random Forest. Cada F1 e recall da tabela também corresponde à média das três sementes, calculada separadamente da contagem de falsos alarmes.
+
+A conferência contou verdadeiros positivos (TP), falsos positivos (FP), falsos negativos (FN) e verdadeiros negativos (TN) em cada semente. Foram usadas as fórmulas F1 = 2 × TP / (2 × TP + FP + FN), recall = TP / (TP + FN) e taxa de falsos alarmes = FP / 874; o recall zero-day considerou apenas os 300 ataques desse subconjunto. Depois, foi calculada a média aritmética das três sementes e verificada a concordância com o resumo publicado. Os custos e as latências foram consultados no mesmo resumo, conforme os preços e as condições das execuções originais.
+
+Essas evidências ajudam a justificar as preferências do jogo:
+
+- **O ataque sem nota pode explorar erros de classificação.** O recall médio do Jev sobre todos os ataques foi 0,778, o que corresponde a aproximadamente 22,17% de registros maliciosos sem alerta. Nos ataques zero-day, o complemento do recall foi 25,33%. Isso justifica considerar benefício residual para o atacante sem nota; os valores ordinais dos payoffs e a equivalência entre S/B e S/R continuam sendo hipóteses.
+- **Detectar mais ataques pode impor custos aos usuários legítimos.** O Random Forest alcançou recall de 1,000 nos ataques zero-day, mas alertou, em média, sobre 87,38% dos registros legítimos. O resultado fundamenta a inclusão dos falsos alarmes na preferência do defensor e a preservação de AT4.
+- **Alterar o contexto pode mudar o custo da decisão.** No Jev, passar de k = 0 para k = 1 elevou o recall médio de 0,654 para 0,778 e os falsos alarmes médios de 21,33 para 43,33. O custo histórico estimado passou de US$ 42,67 para US$ 74,43 por milhão de registros, e a latência média passou de 309,95 ms para 315,00 ms. Esses resultados motivam investigar os custos de H4, mas medem a mudança de exemplos, não o reforço das instruções R.
+
+**Limites:** os resultados foram produzidos na base em 22/09/2026. O recálculo desta contribuição utilizou as previsões armazenadas, sem novas chamadas aos modelos. As execuções não testaram notas, rótulos adulterados ou instruções enganosas. Os números não comprovam H1–H4 nem determinam a eficácia de Qwen ou Laya.
+
+#### Comparações pareadas publicadas
+
+Os testes pareados Jev × Gemini com k = 1 também foram conferidos a partir das previsões armazenadas. As contagens de discordâncias e os valores de p coincidiram com os arquivos publicados:
+
+| Recorte                                                                | Pares | Discordantes | Jev correto / Gemini incorreto | Gemini correto / Jev incorreto | p exato do McNemar |
+| ---------------------------------------------------------------------- | ----: | -----------: | -----------------------------: | -----------------------------: | -----------------: |
+| [Todos os registros](jev-ids/results/paper/compare-jev-gemini-all.csv) | 6.000 |          508 |                            195 |                            313 |     1,85245 × 10⁻⁷ |
+| [Ataques zero-day](jev-ids/results/paper/compare-jev-gemini-novel.csv) |   900 |          118 |                             74 |                             44 |         0,00733002 |
+
+Foi reproduzido o teste exato bicaudal do McNemar, considerando as duas contagens de discordâncias. A comparação mede a correção dos vereditos de detectores distintos; não testa diretamente diferenças de F1 nem o efeito das notas ou das instruções reforçadas. Os 6.000 pares correspondem aos mesmos 2.000 registros sob três sementes; os 900 pares zero-day correspondem aos mesmos 300 ataques. Portanto, esses pares não devem ser apresentados como registros independentes.
 
 ## 3.3 Modelo estratégico dinâmico
 
@@ -386,6 +410,14 @@ A resposta proposta para A1 atua sobre o pressuposto **S1**, que separa dados de
 ### Evidência e limites
 
 A inspeção dos arquivos do ZIP `Jev-ids-adversarial-Developer (1).zip` confirmou os mecanismos descritos em P1–P4. Esta contribuição não executou testes de ataque, não produziu medidas de eficácia e não alterou o código. Os pressupostos S1–S4 da seção 3.1 fundamentam a rastreabilidade dos pontos e cenários. Os cenários de insider devem continuar separados das capacidades do atacante principal.
+
+#### Evidências quantitativas da base — issue #21
+
+A conferência dos resultados existentes identificou, para o Jev com k = 1, média de 43,33 falsos alarmes em 874 registros legítimos e recall médio de 0,747 nos ataques zero-day. Esses números mostram que a detecção já apresenta erros e custos sobre AT1 e AT4 antes das manipulações analisadas. A seção 3.2 apresenta as contagens por semente, o método de recálculo e os links para os [resultados e previsões versionados](jev-ids/results/paper/).
+
+Essas frequências não constituem estimativas de sucesso de A1, A2 ou A3: as execuções armazenadas não aplicaram `note=attacks`, `labels=flipped` ou `instructions=misleading`. Portanto, a matriz de risco e a reavaliação de A1 mantêm suas notas qualitativas. O acesso aos componentes e as capacidades necessárias continuam fundamentando a probabilidade; os resultados publicados apenas dão contexto à relevância do impacto e aos efeitos colaterais.
+
+Foi realizado o levantamento dos números publicados, conforme a alternativa da issue #21 de manter somente o primeiro item. Os ensaios opcionais por nível no recorte `pilot` não foram executados nesta contribuição. A conferência das medições do Nimble citadas na seção 3.3 também permanece separada: os arquivos de previsões desse estudo não estão incluídos entre os resultados importados e não foram recalculados aqui.
 
 ## 4. Arquitetura planejada e continuidade
 
