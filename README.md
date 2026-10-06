@@ -117,7 +117,7 @@ Há objetivos conflitantes: o atacante pretende evitar alertas sobre registros m
 
 ### Ações e utilidades
 
-O atacante escolhe **N**, inserir uma nota enganosa, ou **S**, submeter o registro malicioso sem nota. O defensor escolhe **B**, manter instruções básicas, ou **R**, usar instruções reforçadas que explicitam a separação entre dados e instruções. Ambas as ações defensivas respeitam o recorte: não alteram exemplos, modelo ou limiar.
+O atacante escolhe **N**, inserir uma nota enganosa, ou **S**, submeter o registro malicioso sem nota. O defensor escolhe **B**, manter instruções básicas, ou **R**, usar instruções reforçadas que explicitam a separação entre dados e instruções. Ambas as ações defensivas respeitam o recorte: não alteram exemplos, modelo ou limiar. Cada ação vale para a rodada inteira: o defensor escolhe uma única versão de instruções, aplicada a todos os registros, e não pode escolher instruções registro a registro.
 
 A matriz é uma hipótese estratégica para discussão do grupo. Os valores 0–3 representam somente ordens de preferência, não resultados medidos. Cada par segue a ordem **(atacante, defensor)**. O símbolo ★A indica uma melhor resposta do atacante; ★D, do defensor.
 
@@ -426,6 +426,8 @@ A validação opera em dois modos:
 | ------------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **Observar** (padrão)     | Ciclo principal das seções 3.2 e 3.3 | Segue para o detector. O status vai para o log e para os resultados autorizados do defensor.                  | O recorte permite ao defensor mudar só as instruções. Bloquear tornaria a ação N inútil por construção (H1 falsa) e eliminaria o jogo analisado. |
 | **Bloquear** (comparação) | Condição separada, no Trabalho 2     | Não chega ao detector. O atacante recebe "alerta", sem o motivo; o avaliador conta como `inválido bloqueado`. | Mede quanto da ameaça A1 um controle fora das instruções eliminaria, e a que custo para registros legítimos com valores raros.                   |
+
+**Uma versão de instruções por rodada.** No modo Observar, o status de validação chega ao defensor só como contagem agregada (I7) e nunca seleciona instruções para um registro específico. Se o defensor pudesse aplicar R apenas aos registros marcados como inválidos, o reforço deixaria de custar algo nos registros sem nota, a hipótese H4 da seção 3.2 ficaria falsa e o jogo se estabilizaria em S/R. Esse uso condicional fica fora do recorte e, se for estudado no Trabalho 2, deve ser uma condição de comparação separada, como o modo Bloquear.
 
 **Limite da validação:** ela detecta texto anexado a `service`, mas não a substituição do valor por **outro valor válido** do vocabulário. A nota "de outra natureza" que abre a segunda volta do ciclo (R4, seção 3.3) pode explorar exatamente essa lacuna, que permanece como risco residual.
 
