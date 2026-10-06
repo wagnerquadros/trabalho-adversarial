@@ -1,0 +1,6 @@
+# The files hashed into every run keep their committed bytes on every platform. With `core.autocrlf` on Windows, the prompts and the cards
+# would be checked out with CRLF, and prompt_hash and the card's sha256 would no longer match the runs made with them. The split files were
+# written by Python's csv module with CRLF and committed that way, so Git leaves their bytes alone.
+prompts/** text eol=lf
+data/**/*.json text eol=lf
+data/**/*.csv -text

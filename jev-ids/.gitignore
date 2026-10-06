@@ -1,0 +1,16 @@
+.env
+__pycache__/
+.venv/
+.ruff_cache/
+.complexipy_cache/
+.pytest_cache/
+.coverage
+.DS_Store
+data/*
+!data/*/
+data/raw/
+data/*/pool.csv
+data/*/test.csv
+results/**/responses.jsonl
+*.log
+dev-docs/
