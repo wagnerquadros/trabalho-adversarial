@@ -369,21 +369,106 @@ A inspeção dos arquivos do ZIP `Jev-ids-adversarial-Developer (1).zip` confirm
 
 ## 4. Arquitetura planejada e continuidade
 
-| Componente                                     | Situação                                                                        | Entrada → saída                                                        |
-| ---------------------------------------------- | ------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| Detectores e mecanismos de contexto do Jev IDS | Existentes na base; integrações locais precisam ser verificadas.                | Registro, instruções e exemplos → resposta do detector.                |
-| Atacante caixa-preta                           | Proposto pelo grupo.                                                            | Vereditos próprios e orçamento → nota ou retirada da nota.             |
-| Defensor adaptativo                            | Proposto pelo grupo.                                                            | Resultados autorizados de desenvolvimento → instruções revisadas.      |
-| Orquestrador                                   | Proposto pelo grupo.                                                            | Configuração e agentes → sequência de rodadas e observações separadas. |
-| Avaliador e log                                | Métricas e registros existem na base; separação por agente e rodada é proposta. | Predições e gabarito reservado → métricas, custos e log.               |
+O Trabalho 1 não exige implementação. Esta seção descreve os componentes necessários para executar no Trabalho 2 a interação analisada nas seções 3.2 e 3.3, as interfaces entre eles e a ordem em que serão desenvolvidos. Cada componente é classificado em uma de três situações:
+
+- **Existente:** já está no código do Jev IDS e foi inspecionado pelo grupo.
+- **Ambiente simulado:** montagem experimental que substitui uma rede real. Usa partes existentes, mas sua configuração é responsabilidade do grupo.
+- **Proposto:** ainda não existe; será desenvolvido pelo grupo.
+
+A base de referência é o repositório [Jev-ids-adversarial](https://github.com/Tucelos/Jev-ids-adversarial), branch `Developer`, commit `4a7f2df`. Enquanto o merge para a `main` não estiver concluído, os arquivos são citados por links fixos para esse commit (`https://github.com/Tucelos/Jev-ids-adversarial/blob/4a7f2df/<caminho>`), para que o relatório não dependa do estado da branch.
+
+### 4.1 Componentes
+
+| ID  | Componente                       | Situação                                                                                                                                                                     | Responsabilidade                                                                                                                                | Origem na base                                                                                             |
+| --- | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| C1  | Registros e gabarito             | Existente                                                                                                                                                                    | Fornecer registros do NSL-KDD. O gabarito fica separado da entrada do detector.                                                                 | `jev_ids/records.py`                                                                                       |
+| C2  | Montagem do contexto             | Existente                                                                                                                                                                    | Juntar instruções, exemplos rotulados fixos e o registro; aplicar a nota em `service`.                                                          | `jev_ids/context.py` (`Rewriter.apply`); `prompts/nsl-kdd/context.json`; `prompts/nsl-kdd/jev.json`        |
+| C3  | Detector                         | Existente: os adaptadores do Jev, do Laya e de LLMs via Ollama já estão na base; **ambiente simulado**: executar Qwen3:8b e Laya nas máquinas do grupo, ainda não verificado | Devolver `p_attack` e categoria para cada registro. Um modelo por execução.                                                                     | `jev_ids/detectors/jev.py`; `jev_ids/detectors/laya.py`; `jev_ids/detectors/llm.py` (`llm:ollama`)         |
+| C4  | Avaliador e métricas             | Existente; ajuste **proposto** na política de falhas                                                                                                                         | Comparar respostas com o gabarito; calcular evasão, recall, F1, falsos alarmes, falhas, tokens e latência.                                      | Métricas da base; `complete_prediction` em `jev_ids/records.py`                                            |
+| C5  | Canal de submissão e coordenador | **Ambiente simulado**                                                                                                                                                        | Receber os registros adulterados do atacante e as instruções do defensor; executar as rodadas; entregar a cada lado só o que ele pode observar. | Novo; reutiliza C1, C2 e C4                                                                                |
+| C6  | Validador de campos simbólicos   | Proposto                                                                                                                                                                     | Verificar se os campos simbólicos do registro pertencem ao vocabulário permitido (4.3).                                                         | Novo                                                                                                       |
+| C7  | Atacante caixa-preta             | Proposto                                                                                                                                                                     | Manter, retirar ou reformular a nota a partir dos próprios vereditos, dentro do orçamento.                                                      | Novo; agente LLM com Agno, biblioteca que a base já usa em `jev_ids/agent.py` e `jev_ids/detectors/llm.py` |
+| C8  | Defensor adaptativo              | Proposto                                                                                                                                                                     | Escolher ou revisar as instruções (B ou R) a partir dos resultados autorizados; manter memória das versões testadas.                            | Novo; agente LLM com Agno                                                                                  |
+| C9  | Log por rodada                   | Proposto, estendendo os registros existentes                                                                                                                                 | Registrar versão das instruções, nota, veredito, status de validação, falhas e custos por rodada e por agente.                                  | Extensão dos registros da base                                                                             |
+| —   | Agente de busca da base          | Existente, **fora do ciclo**                                                                                                                                                 | Busca de contexto guiada pelo F1 da avaliação. É uma condição com oráculo e só serve como comparação, nunca como o atacante deste trabalho.     | `jev_ids/agent.py`                                                                                         |
+
+O que **não** muda no recorte, em nenhuma rodada: os demais atributos do registro, os exemplos rotulados, o modelo detector escolhido para a execução e o limiar de 0,5.
+
+### 4.2 Interfaces
+
+A separação de observações é a principal exigência da arquitetura: cada interface declara também o que **não** passa por ela.
+
+| ID  | De → para               | O que passa                                                                                                                                        | O que não passa                                                                             |
+| --- | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| I1  | C5 → atacante (C7)      | Identificador da tentativa, registro malicioso a submeter, veredito das próprias tentativas anteriores (alerta ou sem alerta), orçamento restante. | `p_attack`, categoria, instruções, exemplos, gabarito, F1, resultados de outras tentativas. |
+| I2  | Atacante (C7) → C5      | `{tentativa, registro, ação: N ou S, nota}`, com a nota limitada a um tamanho máximo, a definir no Trabalho 2.                                     | Alteração de qualquer outro atributo.                                                       |
+| I3  | Defensor (C8) → C5      | `{versão, ação: B ou R, texto das instruções}`, limitado a um número máximo de tokens, a definir no Trabalho 2.                                    | Alteração de registros, exemplos, modelo ou limiar.                                         |
+| I4  | C5 → validador (C6)     | Registro com a nota aplicada. Retorno: `válido` ou `inválido`, com o campo e o motivo.                                                             | —                                                                                           |
+| I5  | C2 → detector (C3)      | Instruções vigentes, exemplos fixos e registro.                                                                                                    | Gabarito e status de validação.                                                             |
+| I6  | Detector (C3) → C4      | `{p_attack ∈ [0, 1], categoria}` ou `{falha, motivo}`.                                                                                             | —                                                                                           |
+| I7  | C4 → C5 → defensor (C8) | Agregados do conjunto de desenvolvimento: evasões, falsos alarmes, falhas, registros inválidos, notas testadas, tokens e latência.                 | Dados do conjunto final reservado.                                                          |
+| I8  | Todos → log (C9)        | Tudo o que cada componente recebeu e devolveu na rodada.                                                                                           | O log não é lido pelos agentes.                                                             |
+
+Uma resposta sem `p_attack` (I6) é registrada como **falha** e reportada à parte, nunca como "sem alerta". Isso corrige, no ambiente do grupo, o comportamento apontado em P4 e protege o pressuposto S4.
+
+### 4.3 Validação dos campos simbólicos
+
+A defesa reforçada (seção 3.2) e a resposta à ameaça A1 (seção 3.4) supõem que o sistema reconhece quando um campo deixou de conter um valor legítimo. O cartão do dataset informa apenas **quais** campos são simbólicos, não **quais valores** eles aceitam. Por isso, a validação precisa de quatro decisões explícitas:
+
+1. **Campos validados:** os três listados em `symbolic` no cartão `data/nsl-kdd/dataset.json`: `protocol_type`, `service` e `flag`.
+2. **Origem do vocabulário:** os valores distintos de cada campo em `pool.csv`, a partição de treino (KDDTrain+) de onde a base retira os exemplos. A base já calcula exatamente esse vocabulário para o Random Forest, na função `vocabulary` de `jev_ids/detectors/random_forest.py`, que lê o pool inteiro; o validador reutiliza essa função e grava o resultado, com seu hash, no log de cada execução. O `test.csv` (KDDTest+), de onde vêm os registros avaliados, não entra no vocabulário.
+3. **Regra:** comparação exata com o vocabulário, sem normalização. Normalizar (cortar espaços, trocar caixa, remover sufixos) poderia apagar a nota e esconder do defensor que houve uma tentativa.
+4. **Registro inválido:** nunca é tratado como normal. Recebe o status `inválido`, separado de `falha` e dos vereditos, e é contado à parte nas métricas.
+
+A validação opera em dois modos:
+
+| Modo                      | Uso                                  | O que acontece com o registro inválido                                                                        | Por quê                                                                                                                                          |
+| ------------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Observar** (padrão)     | Ciclo principal das seções 3.2 e 3.3 | Segue para o detector. O status vai para o log e para os resultados autorizados do defensor.                  | O recorte permite ao defensor mudar só as instruções. Bloquear tornaria a ação N inútil por construção (H1 falsa) e eliminaria o jogo analisado. |
+| **Bloquear** (comparação) | Condição separada, no Trabalho 2     | Não chega ao detector. O atacante recebe "alerta", sem o motivo; o avaliador conta como `inválido bloqueado`. | Mede quanto da ameaça A1 um controle fora das instruções eliminaria, e a que custo para registros legítimos com valores raros.                   |
+
+**Limite da validação:** ela detecta texto anexado a `service`, mas não a substituição do valor por **outro valor válido** do vocabulário. A nota "de outra natureza" que abre a segunda volta do ciclo (R4, seção 3.3) pode explorar exatamente essa lacuna, que permanece como risco residual.
+
+Esta decisão precisa ser confirmada nas issues #7 (modelo estático) e #12 (resposta à ameaça), para que as três seções descrevam a mesma defesa.
+
+### 4.4 Fluxo de uma rodada
 
 ![Arquitetura planejada](diagramas/arquitetura-planejada.png)
 
 Fonte editável: [quadro no Figma](https://www.figma.com/design/pioW9qAOO7tnPXLljz2aNk?node-id=54-2).
 
-O diagrama mostra os cinco componentes da tabela em operação. O que ele deliberadamente não mostra continua valendo: os demais atributos do registro, os exemplos rotulados, o modelo detector e o limiar de alerta permanecem fixos (seção 3.1); o atacante opera sob orçamento de tentativas e tamanho máximo de nota, e cada nota testada fica visível ao defensor; e o defensor registra cada versão de instrução com seu custo (seção 3.4). A primeira rodada não passa pela decisão, porque ainda não existe veredito anterior para dizer quem errou.
+O diagrama mostra os cinco componentes da tabela em operação. O que ele deliberadamente não mostra continua valendo: os demais atributos do registro, os exemplos rotulados, o modelo detector e o limiar de alerta permanecem fixos (seção 3.1); o atacante opera sob orçamento de tentativas e tamanho máximo de nota, e cada nota testada fica visível ao defensor; e o defensor registra cada versão de instrução com seu custo (seção 3.4).
 
-A revisão das instruções atua antes da montagem da entrada do detector. A avaliação acompanha taxa de evasão nos registros maliciosos, F1, recall, falsos alarmes sobre registros legítimos, falhas e custo/latência. Falhas devem ser reportadas separadamente de classificações válidas. O futuro enunciado do Trabalho 2 poderá exigir ajustes nesta arquitetura.
+Os números seguem o diagrama:
+
+1. **Entrada (configuração):** define o modelo detector, a semente, os orçamentos e o modo de validação.
+2. **Decisão:** o orquestrador recebe os vereditos e dá a vez a um agente. Na R1 não há veredito anterior: as ações iniciais N e B vão direto ao detector (linha tracejada).
+3. **Quem adapta:** se o ataque passou (3a), o defensor revisa as instruções; se recebeu alerta (3b), o atacante reformula a nota.
+4. **Instruções revisadas** (I3) e 5. **nota reformulada** (I2) chegam à montagem do contexto; a nota passa antes pelo validador (I4).
+5. **Vereditos:** o detector responde (I6) e o avaliador calcula as métricas.
+6. **Resultados autorizados** voltam ao orquestrador, que separa o que vai a cada lado (I1 e I7).
+
+O validador (C6) ainda não aparece no diagrama; ele entra entre o passo 5 e o detector.
+
+A avaliação acompanha, por modelo e separadamente: taxa de evasão dos registros maliciosos, recall, F1, falsos alarmes sobre registros legítimos, falhas, registros inválidos, tokens e latência.
+
+### 4.5 O que será desenvolvido depois
+
+A ordem prioriza o que pode invalidar as conclusões das seções 3.2 a 3.4 antes de construir os agentes.
+
+| Etapa | Entrega                                                                                                                            | Critério de pronto                                                                                     | Ligação com o relatório |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | ----------------------- |
+| 1     | Fixar o commit da base; executar Qwen3:8b (`llm:ollama`) e Laya com os adaptadores existentes, conferindo o _thinking_ desativado. | Os dois modelos devolvem `p_attack` e categoria em um lote de teste; falhas aparecem contadas à parte. | 2, C3                   |
+| 2     | Política de falhas e status `inválido` no avaliador.                                                                               | Nenhuma falha ou registro inválido é contado como "sem alerta".                                        | P4, S4                  |
+| 3     | Validador nos dois modos, reutilizando `vocabulary`.                                                                               | Registros do dataset passam; registros com nota são marcados como inválidos.                           | 4.3                     |
+| 4     | Medição estática das hipóteses, sem agentes: notas fixas, instruções B e R.                                                        | Taxas medidas para H3 primeiro, depois H1, H4 e H2, por modelo.                                        | 3.2 (sensibilidade)     |
+| 5     | Orquestrador com separação de observações e log por rodada.                                                                        | Um teste confirma que o atacante nunca recebe `p_attack`, instruções, gabarito ou F1.                  | 3.1, 3.3                |
+| 6     | Agentes atacante e defensor (Agno), com orçamentos de tentativas e de revisões.                                                    | Uma execução completa de R1 a R4 registrada no log.                                                    | 3.3                     |
+| 7     | Execuções por modelo, com repetição por semente; comparação com `agent.py` como limite superior com oráculo.                       | Resultados de Qwen e Laya reportados separadamente; matriz e notas de risco revistas.                  | 3.2, 3.4                |
+
+Se a etapa 4 mostrar que H3 é falsa — o reforço não neutraliza a nota —, as etapas 5 a 7 continuam úteis, mas a resposta proposta para A1 precisa ser substituída antes, conforme a análise de sensibilidade da seção 3.2.
+
+**Riscos de projeto:** o Laya pode não devolver uma probabilidade compatível com o limiar de 0,5; os agentes, por também usarem LLM, acrescentam custo e variação entre execuções, o que exige sementes fixas e repetições; e o coordenador é, com o avaliador, o único componente que toca o gabarito, então um erro nele vaza informação para os agentes. O enunciado do Trabalho 2 poderá exigir ajustes nesta arquitetura.
 
 ## 5. Fechamento: pergunta final
 
@@ -397,44 +482,63 @@ Cada resposta, portanto, revela informação ao outro lado, e nenhuma defesa enc
 
 ## 6. Origem, referências e uso de IA
 
-O Jev IDS fornece a base de detectores, contextos, registros e métricas. O grupo propõe a separação de observações e o ciclo entre atacante caixa-preta e defensor adaptativo. A inspeção do código não equivale à validação experimental das ameaças.
+O Jev IDS fornece a base de detectores, contextos, registros e métricas. O grupo propõe o ambiente simulado, a separação de observações, o validador de campos simbólicos e o ciclo entre atacante caixa-preta e defensor adaptativo. A inspeção do código não equivale à validação experimental das ameaças.
 
-Referências citadas no relatório. A lista completa, com o que cada fonte sustenta e onde é citada, está em [`fontes/referencias.md`](fontes/referencias.md).
+A lista completa, com o que cada fonte sustenta e onde é citada, está em [`fontes/referencias.md`](fontes/referencias.md).
 
-- Projeto Jev IDS: https://github.com/Tucelos/Jev-ids-adversarial (branch Developer; registrar o commit efetivamente utilizado antes da entrega).
-- Documentação Jev: https://docs.typesafe.ai/introduction.
-- Modelo Qwen3-8B: https://huggingface.co/Qwen/Qwen3-8B.
-- Ollama: https://docs.ollama.com/.
-- Laya: https://huggingface.co/convaiinnovations/laya.
+**Sistema, dados e ferramentas**
+
+- TUCELOS. Jev-ids-adversarial. Repositório GitHub, branch `Developer`, commit `4a7f2df`. https://github.com/Tucelos/Jev-ids-adversarial.
+- TUCELOS. Jev IDS: results (`docs/results.md`, commit `57fa123`). https://github.com/Tucelos/Jev-ids-adversarial/blob/main/docs/results.md.
+- TypeSafe. Jev: introduction. https://docs.typesafe.ai/introduction.
+- Qwen Team. Qwen3-8B. https://huggingface.co/Qwen/Qwen3-8B.
+- Ollama. Documentação. https://docs.ollama.com/.
+- Convai Innovations. Laya. https://huggingface.co/convaiinnovations/laya.
+- Agno. Documentação. https://docs.agno.com/introduction.
 - TAVALLAEE, M.; BAGHERI, E.; LU, W.; GHORBANI, A. A. A detailed analysis of the KDD CUP 99 data set. IEEE CISDA, 2009. https://doi.org/10.1109/CISDA.2009.5356528.
 - Canadian Institute for Cybersecurity (UNB). NSL-KDD dataset. https://www.unb.ca/cic/datasets/nsl.html.
+
+**Segurança de modelos e teoria dos jogos**
+
 - OWASP Foundation. LLM01:2025 Prompt Injection. https://genai.owasp.org/llmrisk/llm01-prompt-injection/.
 - GRESHAKE, K. et al. Not what you've signed up for: Compromising Real-World LLM-Integrated Applications with Indirect Prompt Injection. arXiv:2302.12173, 2023. https://doi.org/10.48550/arXiv.2302.12173.
 - VASSILEV, A. et al. Adversarial Machine Learning: A Taxonomy and Terminology of Attacks and Mitigations. NIST AI 100-2 E2025, 2025. https://doi.org/10.6028/NIST.AI.100-2e2025.
 - NASH, J. Non-Cooperative Games. Annals of Mathematics, v. 54, n. 2, p. 286-295, 1951. https://doi.org/10.2307/1969529.
 - BIGGIO, B.; ROLI, F. Wild patterns: Ten years after the rise of adversarial machine learning. Pattern Recognition, v. 84, p. 317-331, 2018. https://doi.org/10.1016/j.patcog.2018.07.023.
-- Disciplina AL2268 Engenharia de Software Adversarial, Unipampa, 2026/2: transcrições das Aulas 4 e 5.
-- Instruções de entrega encaminhadas pelo professor: modelo estático, dinâmico, ameaças e riscos; relatório Markdown, PDF dos slides e vídeo no YouTube.
 
-**Declaração desta edição:** houve apoio de IA na redação dos pressupostos, modelagem ilustrativa, cenários e organização do relatório. Os mecanismos de contexto e registro foram inspecionados no código fornecido. Os payoffs, rodadas e notas de risco são propostas para revisão do grupo, não resultados de experimentos deste trabalho. A exceção está na seção 3.3, que cita medições preliminares de um estudo paralelo sobre a base do Jev IDS, feitas com um terceiro detector (Nimble 9B) e identificadas como tais no texto; elas indicam ordem de grandeza e direção, e não substituem a avaliação de Qwen e Laya, ainda pendente. Cada integrante deve registrar seu próprio uso de IA e sua verificação.
+**Material da disciplina**
 
-**Amanda:** IA generativa (Claude, da Anthropic) foi usada para levantar fontes, calcular o equilíbrio em estratégia mista, montar a análise de sensibilidade dos payoffs e redigir o glossário e o fechamento. Verificação: cada fonte externa foi aberta e o trecho que ela sustenta foi conferido no original (seção ou linha indicada em `fontes/referencias.md`); os metadados bibliográficos foram conferidos no Crossref; o cálculo do equilíbrio e os equilíbrios de cada hipótese da análise de sensibilidade foram refeitos por script.
+- AL2268 Engenharia de Software Adversarial, Unipampa, 2026/2: transcrições das Aulas 4 e 5.
+- Instruções de entrega encaminhadas pelo professor e parecer sobre a divisão das issues.
+
+### Uso de IA
+
+**Declaração do grupo:** houve apoio de IA na redação dos pressupostos, modelagem ilustrativa, cenários e organização do relatório. Os mecanismos de contexto e registro foram inspecionados no código fornecido. Os payoffs, rodadas e notas de risco são propostas para revisão do grupo, não resultados de experimentos deste trabalho. A exceção está na seção 3.3, que cita medições preliminares de um estudo paralelo sobre a base do Jev IDS, feitas com um terceiro detector (Nimble 9B) e identificadas como tais no texto; elas indicam ordem de grandeza e direção, e não substituem a avaliação de Qwen e Laya, ainda pendente. Cada integrante registra abaixo seu próprio uso e sua verificação.
+
+| Integrante | Uso de IA                                                                                                                                                                                 | Verificação                                                                                                                                                                                                                        |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Wagner     | `<preencher>`                                                                                                                                                                             | `<preencher>`                                                                                                                                                                                                                      |
+| Amanda     | IA generativa (Claude, da Anthropic) para levantar fontes, calcular o equilíbrio em estratégia mista, montar a análise de sensibilidade dos payoffs e redigir o glossário e o fechamento. | Cada fonte externa foi aberta e o trecho conferido no original (seção ou linha indicada em `fontes/referencias.md`); metadados conferidos no Crossref; equilíbrio e análise de sensibilidade refeitos por script.                  |
+| Tuigg      | `<preencher>`                                                                                                                                                                             | `<preencher>`                                                                                                                                                                                                                      |
+| Camilla    | `<preencher>`                                                                                                                                                                             | `<preencher>`                                                                                                                                                                                                                      |
+| Lara       | `<preencher>`                                                                                                                                                                             | `<preencher>`                                                                                                                                                                                                                      |
+| Pietra     | IA generativa (Claude, da Anthropic) como apoio na organização e redação da seção 4, na consolidação das referências e contribuições e na estrutura dos slides.                           | Conferi os arquivos e funções citados na seção 4 no código da branch Developer do Jev IDS (commit `4a7f2df`), a lista de campos simbólicos no cartão `data/nsl-kdd/dataset.json` e a coerência da seção 4 com as seções 3.2 a 3.4. |
 
 ## 7. Entrega e contribuições
 
 - Relatório principal: este README.
-- PDF dos slides: **link pendente**.
-- Vídeo no YouTube: **link pendente**.
-- Prazo informado: **06/10/2026 às 23h59**.
-- Gravação preferencial no Canva. Integrantes do PPGES terão o vídeo exibido ao vivo e poderão responder perguntas; graduação responderá de forma assíncrona conforme solicitação docente.
+- PDF dos slides: `<link>`.
+- Vídeo no YouTube: `<link>`.
+- Prazo: **06/10/2026 às 23h59**.
+- Gravação preferencial no Canva. Integrantes do PPGES terão o vídeo exibido ao vivo e poderão responder perguntas; a graduação responderá de forma assíncrona, conforme solicitação docente.
 
-| Integrante | Parte atribuída na divisão                     | Registro de contribuição                                                                                                                                          |
-| ---------- | ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Wagner     | Sistema, contexto e integração.                | Acrescentar commits/PRs e trecho do vídeo.                                                                                                                        |
-| Amanda     | Modelo estático e organização.                 | Branch `amanda`: fontes e referências, citações nas seções, equilíbrio misto e análise de sensibilidade da 3.2, glossário, fechamento e padronização das tabelas. |
-| Tuigg      | Modelo dinâmico e vídeo.                       | Seção 3.3, diagrama do ciclo adaptativo e diagrama da arquitetura planejada. Coordena montagem e publicação do vídeo.                                             |
-| Camilla    | Superfície de ataque, cenários e riscos.       | Acrescentar PR da branch camilladev e trecho do vídeo.                                                                                                            |
-| Membro 5   | Resposta, efeitos colaterais e risco residual. | Confirmar nome e revisar a proposta desta edição.                                                                                                                 |
-| Pietra     | Arquitetura e apresentação.                    | Acrescentar commits/PRs e links finais.                                                                                                                           |
+| Integrante | Issues               | Parte                                                                                                         | Revisado por | Contribuição no relatório                                                                                                                                         |
+| ---------- | -------------------- | ------------------------------------------------------------------------------------------------------------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Wagner     | #1, #5, #6, #15, #17 | Recorte, descrição do sistema, contexto e glossário; coordena a revisão final.                                | Camilla      | Seções 1, 2 e 3.1 e diagrama de contexto.                                                                                                                         |
+| Amanda     | #2, #3, #4, #7       | Pasta e esqueleto do relatório; matriz, payoffs e melhores respostas.                                         | Tuigg        | Branch `amanda`: fontes e referências, citações nas seções, equilíbrio misto e análise de sensibilidade da 3.2, glossário, fechamento e padronização das tabelas. |
+| Tuigg      | #8, #9               | Rodadas e ciclo adaptativo.                                                                                   | Amanda       | Seção 3.3, diagrama do ciclo adaptativo e diagrama da arquitetura planejada.                                                                                      |
+| Camilla    | #10, #11             | Superfície de ataque, cenários e matriz de risco.                                                             | Lara         | Seção 3.4 (pontos de exploração, cenários e matriz de risco) e diagrama de superfície de ataque; branch `camilladev`.                                             |
+| Lara       | #12; #14 opcional    | Referências de apoio; resposta à ameaça prioritária, efeitos colaterais e risco residual.                     | Camilla      | Resposta à ameaça prioritária, efeitos colaterais e risco residual (seção 3.4).                                                                                   |
+| Pietra     | #13, #16, #19        | Arquitetura, interfaces e continuidade; consolidação de referências, IA e contribuições; slides, PDF e vídeo. | Lara         | Seção 4, seções 6 e 7, slides e vídeo; branch `pietra`.                                                                                                           |
 
-Antes de submeter, o grupo deve revisar as propostas estática, dinâmica e de resiliência, completar nomes, referências e links, exportar os diagramas de contexto e ciclo em PNG com fontes editáveis e conferir permissões de acesso ao PDF e vídeo. Esta versão não declara essas pendências concluídas.
+A #17 (revisão final) é feita por todos. A #14 é opcional e não bloqueia a #17.
