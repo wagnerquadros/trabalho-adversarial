@@ -236,6 +236,12 @@ As rodadas abaixo são um cenário de planejamento, não um histórico de execu�
 | **R3 — S/R** | Submete o ataque sem nota. Em paralelo, gasta parte do orçamento sondando variantes da nota, para descobrir qual parte dela era punida. | Mantém **R** enquanto mede seu custo. | **Atacante:** sem a nota volta a passar na taxa de base do detector, o que indica que o punido era a nota. **Defensor:** **R** não traz ganho contra **S** e segue cobrando falso alarme de quem não participa da disputa. Ele também **vê as notas sondadas**, porque notas testadas estão entre suas observações autorizadas. | **Defensor:** volta a **B**, decisão correta pelo custo medido e arriscada diante da sondagem que ele acabou de observar. **Atacante:** conclui a sondagem.                     |
 | **R4 — S/B** | Mantém o ataque sem nota enquanto encerra a sondagem.                                                                                   | Retorna às instruções básicas.        | **Atacante:** registros que recebiam alerta na R3 voltam a passar, sinal de que o regime afrouxou. A sondagem indica que a punição recaía sobre a _alegação de autoridade_, não sobre a presença de texto. **Defensor:** sem a nota, **B** e **R** se equivalem em detecção, e **B** custa menos.                               | O atacante volta a **N**, com uma nota de outra natureza: sem ordem e sem alegação de autoridade, apenas um qualificador de serviço plausível dentro do vocabulário do dataset. |
 
+![Evolução da interação](diagramas/evolucao-rodadas.png)
+
+Fonte editável: [quadro no Figma](https://www.figma.com/design/pioW9qAOO7tnPXLljz2aNk?node-id=61-2).
+
+Os cartões de cima são a tabela acima em forma visual; as três faixas de baixo são o que separa a **R1'** da **R1**. O par de ações volta a ser o mesmo, e a nota, o custo já conhecido de **R** e o orçamento do atacante não voltam.
+
 ### Por que o ciclo não retorna ao ponto de partida
 
 A R4 devolve o par de ações ao estado da R1, mas **o estado da disputa é outro**, por três razões:
@@ -250,7 +256,7 @@ Em outras palavras: os rótulos das células se repetem, mas o conteúdo de cada
 
 - **A resposta também produz informação.** Nas R1 e R2 o atacante nunca vê `p_attack` nem as instruções; ele infere pelo efeito. O "sem alerta" da R1 e o alerta da R2 são, cada um, uma consulta barata ao detector.
 - **Mesmo objetivo, ação diferente.** O objetivo é o mesmo nas quatro rodadas — fazer um registro malicioso receber o veredito sem alerta. O que muda é a nota.
-- **O defensor também observa e adapta.** Nas R1, R2 e R3 quem muda é ele, e sempre a partir de uma observação agregada do avaliador, não de um registro isolado.
+- **O defensor também observa e adapta.** Nas R1 e R3 quem muda de ação é ele; na R2 ele mantém o reforço e passa a medir o que ele custa. A adaptação dele vem sempre de uma observação agregada do avaliador, não de um registro isolado.
 - **Decisões passadas alteram as possibilidades.** Pelas três razões da subseção anterior: a nota muda de natureza, o custo de **R** deixa de ser desconhecido e o orçamento encolhe.
 - **A defesa cobra de quem não está na disputa.** Nas R2 e R3 o reforço aumenta o falso alarme sobre registros legítimos de serviço raro. Esse custo recai sobre o ativo **AT4** e sobre usuários que não participam da interação, e na R3 ele é pago sem benefício, porque o atacante já havia retirado a nota.
 

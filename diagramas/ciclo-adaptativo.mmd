@@ -21,7 +21,7 @@ flowchart TD
     R --> OD
     OA --> D
     OD --> D
-    D -- "o ataque RECEBEU ALERTA" --> AT
+    D -- "o ataque RECEBEU ALERTA,<br/>ou voltou a passar onde antes era pego" --> AT
     D -- "o ataque PASSOU,<br/>ou R custou mais do que rendeu" --> DF
     DF -.-> UL
     AT --> N
