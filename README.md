@@ -594,7 +594,7 @@ A lista completa, com o que cada fonte sustenta e onde é citada, está em [`fon
 
 - Relatório principal: este README.
 - PDF dos slides: [link](https://drive.google.com/file/d/1KuPCliWL9nP-y7hlWaChvSEQVPpIuurM/view?usp=sharing).
-- Vídeo no YouTube: `<link>`.
+- Vídeo no YouTube: [link](https://www.youtube.com/watch?v=os6qJEx_ZzY).
 - Prazo: **06/10/2026 às 23h59**.
 - Gravação preferencial no Canva. Integrantes do PPGES terão o vídeo exibido ao vivo e poderão responder perguntas; a graduação responderá de forma assíncrona, conforme solicitação docente.
 
