@@ -19,7 +19,7 @@ _MATRIX = """<div class="c" style="flex:0 0 340px">
 
 def render_payoff_matrix(snapshot: RoundSnapshot) -> str:
     """Render the two-by-two matrix with the current action pair outlined."""
-    cells = {}
+    cells: dict[str, str] = {}
     for payoff in snapshot.payoffs:
         style = "x cur" if payoff.cell == snapshot.current_cell else "x"
         key = payoff.cell.attacker_action + payoff.cell.defender_action

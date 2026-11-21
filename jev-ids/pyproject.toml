@@ -14,7 +14,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-ui = ["streamlit>=1.40"]
+ui = ["streamlit>=1.67"]
 
 [project.scripts]
 adversarial-sim-ui = "jev_ids.ui.__main__:main"

@@ -16,7 +16,9 @@ from jev_ids.ui.theme import load_css
 
 
 def _show(markup: str) -> None:
-    st.html(f'<div class="arena-html">{markup}</div>')
+    # Keep one HTML block in Markdown so the inline SVG survives rendering.
+    content = " ".join(markup.splitlines())
+    st.markdown(f'<div class="arena-html">{content}</div>', unsafe_allow_html=True)
 
 
 def main() -> None:

@@ -36,5 +36,5 @@ def show_sidebar(snapshot: RoundSnapshot) -> RoundSnapshot:
         st.slider(_BUDGET_LABEL.format(st.session_state.get("budget", snapshot.budget_total)), 4, 30, snapshot.budget_total, key="budget")
         st.selectbox(_VALIDATOR_LABEL, _VALIDATORS)
         st.html(render_sidebar(snapshot))
-        st.button(_START, type="primary", use_container_width=True)
+        st.button(_START, type="primary", width="stretch")
     return replace(snapshot, detector=detector.split(" · ")[0])

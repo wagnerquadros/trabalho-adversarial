@@ -22,7 +22,7 @@ _ANALYSIS = """<div style="display:flex;flex-wrap:wrap;gap:24px">
 
 def render_analysis_tabs(snapshot: RoundSnapshot) -> str:
     """Return the contents of the messages tab."""
-    messages = []
+    messages: list[str] = []
     for message in snapshot.messages:
         actor = escape(message.actor)
         messages.append(

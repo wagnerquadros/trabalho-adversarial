@@ -101,7 +101,7 @@ _DOT_CLASS = {None: "pending", Verdict.ALERT: "", Verdict.QUIET: "quiet"}
 
 
 def _fields(snapshot: RoundSnapshot) -> str:
-    fields = []
+    fields: list[str] = []
     for name, value in snapshot.record_fields:
         tag = "mark" if name == "service" else "span"
         fields.append(f"<span>{escape(name)}</span><{tag}>{escape(value)}</{tag}>")
@@ -109,7 +109,7 @@ def _fields(snapshot: RoundSnapshot) -> str:
 
 
 def _instructions(snapshot: RoundSnapshot) -> str:
-    blocks = []
+    blocks: list[str] = []
     for version in snapshot.instructions:
         quote = f'<div class="k">{escape(version.quotation)}</div>' if version.quotation else ""
         blocks.append(

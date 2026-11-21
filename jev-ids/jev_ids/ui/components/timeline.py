@@ -17,7 +17,7 @@ _TIMELINE = """<section class="c" aria-label="Linha do tempo">
 
 def render_timeline(snapshot: RoundSnapshot) -> str:
     """Render completed, current and pending rounds."""
-    tiles = []
+    tiles: list[str] = []
     for index in range(1, snapshot.total_rounds + 1):
         style = "r p"
         actions = "—"
