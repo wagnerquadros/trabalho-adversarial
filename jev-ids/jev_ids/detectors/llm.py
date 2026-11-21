@@ -13,7 +13,7 @@ In reading order:
 - `make_model`: the Agno model of a provider, with its determinism knobs.
 - `measurements`: what one run measured, read off Agno's RunOutput.
 
-All providers run at the lowest reasoning available. One `Agent.run` per Flow and no retries of our own: a provider error is an error row,
+Qwen3:8b runs with thinking enabled. One `Agent.run` per Flow and no retries of our own: a provider error is an error row,
 and the run goes on.
 """
 
@@ -58,18 +58,20 @@ class Judgement(BaseModel):
 class LLMDetector:
     """Judges Flows with an LLM through an Agno Agent: one call per Flow, no tools."""
 
-    def __init__(self, prompt: dict[str, Any], provider: str, model_id: str | None = None) -> None:
+    def __init__(self, prompt: dict[str, Any], provider: str, model_id: str | None = None, *, categories: Sequence[str] = ()) -> None:
         """Keep the prompt and build the Agno model once.
 
         Args:
             prompt: `run.load_prompt` of `prompts/<dataset>/llm.md`.
             provider: `deepseek`, `openai`, `gemini` or `ollama`.
+            categories: allowed category labels from the dataset card.
             model_id: the provider's model id; None means the provider default, and Ollama has none.
         """
         if model_id is None and provider not in DEFAULT_MODEL:
             raise ValueError(f"llm:{provider} has no default model: name the one to use with --model")
         self.template: str = prompt["text"]
         self.prompt_hash: str = prompt["sha256"]
+        self.categories = categories
         self.provider = provider
         self.model = model_id or DEFAULT_MODEL[provider]
         self.name = f"llm:{provider}"
@@ -97,8 +99,11 @@ class LLMDetector:
         try:
             run: RunOutput = agent.run(f"Record:\n{flow.attributes_csv}")
         except Exception as exc:  # every provider error is recorded, not raised
-            return {"error": f"{type(exc).__name__}: {exc}"[:500]}
-        return measurements(run, (time.perf_counter() - started) * 1000)
+            return {"error": f"{type(exc).__name__}: {exc}"[:500], "latency_ms": (time.perf_counter() - started) * 1000}
+        result = measurements(run, (time.perf_counter() - started) * 1000)
+        if self.categories and result["error"] is None and result["category_pred"] not in self.categories:
+            result.update(error="parse: unknown dataset category", category_pred=None, p_attack=None)
+        return result
 
 
 def instructions(template: str, examples: Sequence[Flow]) -> str:
@@ -126,8 +131,19 @@ def make_model(provider: str, model_id: str) -> Any:
     if provider == "gemini":
         return Gemini(id=model_id, vertexai=True, temperature=0.0, thinking_level="low", timeout=120)
     if provider == "ollama":
-        options = {"temperature": 0.0, "seed": 0, "num_ctx": OLLAMA_NUM_CTX}
-        return Ollama(id=model_id, host=os.environ.get(OLLAMA_HOST_VAR), options=options, timeout=120)
+        options = {
+            "temperature": 0.0,
+            "seed": 0,
+            "num_ctx": OLLAMA_NUM_CTX,
+        }
+
+        return Ollama(
+            id=model_id,
+            host=os.environ.get(OLLAMA_HOST_VAR),
+            options=options,
+            request_params={"think": True},
+            timeout=120,
+        )
     return chatgpt.ChatGPTSubscriptionModel(id=model_id, reasoning_effort="none")
 
 

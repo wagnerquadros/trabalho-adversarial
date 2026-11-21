@@ -94,8 +94,13 @@ def sample(path: Path, config: Config, args: argparse.Namespace) -> tuple[list[s
         header = next(reader)
         check_header(header, config, args.novel)
         label = header.index(LABEL_COLUMN)
+        # Source datasets vary in capitalization (e.g. "xss" versus the card's "XSS").
+        categories = {name.casefold(): name for name in config["categories"]}
         for index, fields in enumerate(reader):
-            category = fields[label]
+            category = categories.get(fields[label].casefold())
+            if category is None:
+                raise ValueError(f"row {index}: unknown source category {fields[label]!r}")
+            fields[label] = category
             counts[category] += 1
             if category not in args.novel:
                 offer_to_reservoir(

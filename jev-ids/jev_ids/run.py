@@ -97,7 +97,8 @@ def build_detector(spec: RunSpec, config: Config) -> Detector:
         return JevDetector(typed) if spec.detector == "jev" else LayaDetector(typed, spec.model_id)
     provider = spec.detector.removeprefix("llm:")
     if spec.detector.startswith("llm:") and provider in llm.PROVIDERS:
-        return LLMDetector(context.apply(load_prompt(prompts / "llm.md"), "llm", spec.context, config), provider, spec.model_id)
+        prompt = context.apply(load_prompt(prompts / "llm.md"), "llm", spec.context, config)
+        return LLMDetector(prompt, provider, spec.model_id, categories=config["categories"] if provider == "ollama" else ())
     if spec.detector in FORESTS:
         # The one-hot vocabulary comes from the whole pool, never from the Examples, and both forests encode a Flow the same way.
         pool = dataset.load_split(config["dir"] / "pool.csv", config)

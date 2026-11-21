@@ -57,12 +57,54 @@ uv run jev-ids run --dataset data/nsl-kdd/dataset.json --detector jev --split sm
 
 The smoke split is five flows. The run writes `results/<timestamp>-nsl-kdd-jev-smoke/` with `config.json`, one JSON row per flow in `predictions.jsonl` (the verdict, the truth, p_attack, the category, the confidence, the latency and the gateway's token report) and the raw answers in `responses.jsonl`.
 
+## Local Qwen3:8b smoke test on NF-UQ-NIDS-V2
+
+Run these commands from `jev-ids/` with Python 3.13. Install Ollama from
+[ollama.com/download](https://ollama.com/download) and start the Ollama application.
+Use `ollama --version` and `ollama list` to verify the installation and model tag.
+If the tag is missing, run `ollama pull qwen3:8b`.
+
+```bash
+uv sync --locked
+uv run python scripts/check_ollama.py
+```
+
+The check prints the server, answer and whether the server returned thinking content.
+For a connection error, check the running server and `OLLAMA_HOST` (default
+`http://localhost:11434`). Thinking is enabled and can increase inference time.
+The detector uses a 120-second timeout and a 16,384-token context window.
+
+Check `data/nf-uq-nids-v2/` for `pool.csv` and the three prepared splits
+`splits/{smoke,internal,paper}.csv`. If preparation is needed, supply the original
+CSV and run the existing sampler once (use a fresh output directory containing a
+copy of the dataset card if preserving a partial preparation):
+
+```bash
+uv run python -m scripts.prepare_nf_uq_nids_v2 --raw "data/raw/nf-uq-nids-v2/NF-UQ-NIDS-v2.csv"
+```
+
+Substitute the actual CSV path if stored elsewhere. Use the study's held-out categories
+with `--novel` when applicable. A missing pool also prevents a zero-shot run.
+
+```bash
+uv run pytest
+uv run jev-ids run --dataset data/nf-uq-nids-v2/dataset.json --detector llm:ollama --model qwen3:8b --split smoke --k 0 --seeds 0
+```
+
+In the new `results/<run_id>/predictions.jsonl`, expect one row per smoke flow
+(five for the standard preparation). Check each row for a null `error`, a
+`category_pred` listed in the dataset card, `p_attack` between 0 and 1 and
+`latency_ms`. The final verdict uses the project threshold of 0.5.
+`usage` contains available token counts. For parse errors, match the
+`request_id` in `responses.jsonl` to inspect the response. Connection errors
+can occur before the server produces an answer.
+
 ## Compare detectors
 
 ```bash
 uv run jev-ids run --dataset data/nsl-kdd/dataset.json --detector jev --split pilot --k 0,1,2,4,8 --seeds 0,1,2
 uv run jev-ids run --dataset data/nsl-kdd/dataset.json --detector llm:gemini --model gemini-3.6-flash --split pilot --k 0,1,2,4,8
-uv run jev-ids run --dataset data/nsl-kdd/dataset.json --detector llm:ollama --model qwen3:8b --split pilot --k 0,1  # OLLAMA_HOST
+
 uv run jev-ids run --dataset data/nsl-kdd/dataset.json --detector laya --split pilot --k 0,1                        # LAYA_BASE_URL
 uv run jev-ids run --dataset data/nsl-kdd/dataset.json --detector random_forest --split pilot --k 1,2,4,8,all
 uv run jev-ids run --dataset data/nsl-kdd/dataset.json --detector isolation_forest --split pilot --k all

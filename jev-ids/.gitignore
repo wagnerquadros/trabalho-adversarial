@@ -9,6 +9,7 @@ __pycache__/
 data/*
 !data/*/
 data/raw/
+data/nf-uq-nids-v2/NF-UQ-NIDS-v2.csv
 data/*/pool.csv
 data/*/test.csv
 results/**/responses.jsonl

@@ -1,12 +1,15 @@
 """LLM detector: instructions from the Markdown file, one Agent per call, its output."""
 
+import json
 from typing import Any
 
+import httpx
 import pytest
 from agno.metrics import RunMetrics
 from agno.models.deepseek import DeepSeek
 from agno.models.google import Gemini
 from agno.run.agent import RunOutput
+from ollama import Client
 
 from jev_ids.detectors import chatgpt, llm
 from jev_ids.run import sample_examples
@@ -116,7 +119,8 @@ def test_provider_errors_are_recorded_not_retried(
 ) -> None:
     fake_agent.outcomes = [RuntimeError("503 busy")]
     prediction = llm.LLMDetector(LLM_PROMPT, "deepseek").predict(FLOW, [])
-    assert prediction == {"error": "RuntimeError: 503 busy"}
+    assert prediction["error"] == "RuntimeError: 503 busy"
+    assert prediction["latency_ms"] > 0
     assert len(fake_agent.built) == 1
 
 
@@ -148,3 +152,36 @@ def test_make_model_applies_the_determinism_knobs() -> None:
     assert (gemini.vertexai, gemini.temperature, gemini.thinking_level, gemini.timeout) == (True, 0.0, "low", 120)
     assert llm.LLMDetector(LLM_PROMPT, "gemini").model == "gemini-3.6-flash"
     assert llm.LLMDetector(LLM_PROMPT, "openai").model == "gpt-5.6-luna"
+
+@pytest.mark.parametrize("category", ["Benign", "unknown"])
+def test_qwen_chat_request_and_structured_response(monkeypatch: pytest.MonkeyPatch, category: str) -> None:
+    host = "http://ollama.test:11434"
+    monkeypatch.setenv("OLLAMA_HOST", host)
+    detector = llm.LLMDetector(LLM_PROMPT, "ollama", "qwen3:8b", categories=["Benign"])
+    assert detector.agno_model.host == host
+    assert detector.agno_model.timeout == 120
+    requests: list[httpx.Request] = []
+
+    def respond(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        answer = json.dumps({"verdict": "normal", "category": category, "p_attack": 0.02})
+        return httpx.Response(200, json={
+            "model": "qwen3:8b", "done": True, "eval_count": 23,
+            "message": {"role": "assistant", "thinking": "separate reasoning", "content": answer},
+        })
+
+    detector.agno_model.client = Client(host=host, transport=httpx.MockTransport(respond))
+    result = detector.predict(FLOW, [])
+    assert len(requests) == 1
+    assert str(requests[0].url) == host + "/api/chat"
+    payload = json.loads(requests[0].content)
+    assert payload["think"] is True
+    assert payload["model"] == "qwen3:8b"
+    assert payload["options"] == {"num_ctx": 16384, "temperature": 0, "seed": 0}
+    assert set(payload["format"]["required"]) == {"category", "verdict", "p_attack"}
+    assert "separate reasoning" not in str(result)
+    assert result["usage"]["output_tokens"] == 23
+    if category == "Benign":
+        assert (result["error"], result["p_attack"], result["category_pred"]) == (None, 0.02, category)
+    else:
+        assert result["error"] and result["p_attack"] is None
