@@ -13,7 +13,11 @@ dependencies = [
     "typesafe-sdk>=0.7.1",
 ]
 
+[project.optional-dependencies]
+ui = ["streamlit>=1.40"]
+
 [project.scripts]
+adversarial-sim-ui = "jev_ids.ui.__main__:main"
 jev-ids = "jev_ids.cli:main"
 
 # The console script above needs the project installed as a package; hatchling ships the flat `jev_ids/` folder and nothing else.
