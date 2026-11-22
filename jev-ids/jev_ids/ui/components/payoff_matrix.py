@@ -21,7 +21,7 @@ def render_payoff_matrix(snapshot: RoundSnapshot) -> str:
     """Render the two-by-two matrix with the current action pair outlined."""
     cells: dict[str, str] = {}
     for payoff in snapshot.payoffs:
-        style = "x cur" if payoff.cell == snapshot.current_cell else "x"
+        style = "x cur" if snapshot.cells and payoff.cell == snapshot.current_cell else "x"
         key = payoff.cell.attacker_action + payoff.cell.defender_action
         cells[key] = f'<td class="{style}"><b>×{payoff.visits}</b><span class="k">{payoff.utilities}</span></td>'
     return _MATRIX.format_map(cells)

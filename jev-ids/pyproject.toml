@@ -17,6 +17,8 @@ dependencies = [
 ui = ["streamlit>=1.67"]
 
 [project.scripts]
+adversarial-sim-probe = "jev_ids.adversarial.cli:probe"
+adversarial-sim-hypotheses = "jev_ids.adversarial.analysis.hypotheses:main"
 adversarial-sim-ui = "jev_ids.ui.__main__:main"
 jev-ids = "jev_ids.cli:main"
 
@@ -54,6 +56,7 @@ max-statements = 50
 typeCheckingMode = "strict"
 
 [tool.pytest.ini_options]
+markers = ["live: requires opt-in and a running local model"]
 addopts = "--cov --cov-fail-under=80"
 testpaths = ["tests"]
 pythonpath = ["."]

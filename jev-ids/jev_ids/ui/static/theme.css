@@ -110,3 +110,6 @@
     [data-testid="stAppViewContainer"] { padding-inline:12px; }
     .summary > .c { flex-basis:100% !important; }
 }
+.dot.blocked { border-radius:2px; background:#566174; }
+.dot.failed { display:inline-grid;place-content:center;font-size:12px;line-height:1; }
+.dot.failed::after { content:"×"; }

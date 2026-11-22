@@ -24,7 +24,7 @@ _ARENA = """<section aria-label="Arena" style="display:grid;grid-template-column
 <div class="t" style="flex-wrap:wrap;gap:6px">
 {dots}
 </div>
-<div class="m" style="margin-top:4px">● sem alerta · ○ alerta · tracejado: ainda não jogada</div>
+<div class="m" style="margin-top:4px">● sem alerta · ○ alerta · tracejado: ainda não jogada{extra_legend}</div>
 </div>
 <div>
 <div class="t m" style="justify-content:space-between"><span>Orçamento de tentativas</span><span>{left} de {total}</span></div>
@@ -97,7 +97,7 @@ _ARENA = """<section aria-label="Arena" style="display:grid;grid-template-column
 </svg>Não vê: conjunto final reservado, log completo</div>
 </article>
 </section>"""
-_DOT_CLASS = {None: "pending", Verdict.ALERT: "", Verdict.QUIET: "quiet"}
+_DOT_CLASS = {None: "pending", Verdict.ALERT: "", Verdict.QUIET: "quiet", Verdict.BLOCKED: "blocked", Verdict.FAILURE: "failed"}
 
 
 def _fields(snapshot: RoundSnapshot) -> str:
@@ -122,13 +122,14 @@ def render_arena(snapshot: RoundSnapshot) -> str:
     """Render the three participants from the same observed round."""
     service = dict(snapshot.record_fields).get("service", "")
     return _ARENA.format(
-        attacker=escape(snapshot.current_cell.attacker_action),
-        defender=escape(snapshot.current_cell.defender_action),
+        attacker=escape(snapshot.current_cell.attacker_action) if snapshot.cells else "—",
+        defender=escape(snapshot.current_cell.defender_action) if snapshot.cells else "—",
         detector=escape(snapshot.detector),
         base_service=escape(service.removesuffix(snapshot.note_suffix)),
         suffix=escape(snapshot.note_suffix),
         intention=escape(snapshot.intention),
         dots="".join(f'<span class="dot {_DOT_CLASS[item]}"></span>' for item in snapshot.attempts),
+        extra_legend=" · × falha · ▧ bloqueio" if snapshot.is_live else "",
         left=snapshot.budget_left,
         total=snapshot.budget_total,
         budget_percent=round(100 * snapshot.budget_left / snapshot.budget_total) if snapshot.budget_total else 0,
@@ -138,9 +139,9 @@ def render_arena(snapshot: RoundSnapshot) -> str:
         mode=escape(snapshot.validator_mode),
         status=escape(snapshot.validator_status),
         validator_note=escape(snapshot.validator_note),
-        probability=format(snapshot.p_attack, "g").replace(".", ","),
+        probability=format(snapshot.p_attack, "g").replace(".", ",") if snapshot.p_attack is not None else "—",
         threshold=format(snapshot.threshold, "g").replace(".", ","),
-        probability_percent=snapshot.p_attack * 100,
+        probability_percent=(snapshot.p_attack or 0) * 100,
         threshold_percent=snapshot.threshold * 100,
         verdict_class="alert" if snapshot.verdict is Verdict.ALERT else "",
         verdict=escape(snapshot.verdict),

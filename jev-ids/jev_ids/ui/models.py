@@ -12,6 +12,9 @@ class Verdict(StrEnum):
 
     QUIET = "SEM ALERTA"
     ALERT = "ALERTA"
+    FAILURE = "FALHA"
+    BLOCKED = "BLOQUEADO"
+    WAITING = "AGUARDANDO"
 
 
 class Actor(StrEnum):
@@ -85,7 +88,7 @@ class RoundSnapshot:
     validator_mode: str
     validator_status: str
     validator_note: str
-    p_attack: float
+    p_attack: float | None
     threshold: float
     verdict: Verdict
     ground_truth: str
@@ -95,11 +98,12 @@ class RoundSnapshot:
     adaptation: str
     payoffs: tuple[Payoff, ...]
     metrics: tuple[Metric, ...]
-    evasion_rates: tuple[int, ...]
-    false_alarm_rates: tuple[int, ...]
+    evasion_rates: tuple[float | None, ...]
+    false_alarm_rates: tuple[float | None, ...]
     messages: tuple[Message, ...]
     context_changes: tuple[tuple[str, str], ...]
     timeline_caption: str
+    is_live: bool = False
 
     @property
     def current_cell(self) -> RoundCell:

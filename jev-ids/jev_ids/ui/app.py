@@ -11,6 +11,7 @@ from jev_ids.ui.components.metrics import render_metrics
 from jev_ids.ui.components.payoff_matrix import render_payoff_matrix
 from jev_ids.ui.components.sidebar import show_sidebar
 from jev_ids.ui.components.timeline import render_timeline
+from jev_ids.ui.live import show_live
 from jev_ids.ui.sample_data import build_sample_snapshot
 from jev_ids.ui.theme import load_css
 
@@ -22,9 +23,13 @@ def _show(markup: str) -> None:
 
 
 def main() -> None:
-    """Show the reference round without running a simulation."""
+    """Open the local detector dashboard or the illustrative reference round."""
     st.set_page_config(page_title=TITLE, layout="wide", initial_sidebar_state="expanded")
     st.markdown(f"<style>{load_css()}</style>", unsafe_allow_html=True)
+    if st.query_params.get("modo") != "demo":
+        show_live()
+        return
+    st.sidebar.markdown("[Abrir classificação com Qwen3:8b](?)")
     snapshot = show_sidebar(build_sample_snapshot())
     with st.container(key="page_header"):
         title, step, run_all = st.columns([8, 1, 1])
