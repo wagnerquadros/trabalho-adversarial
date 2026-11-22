@@ -16,3 +16,5 @@ results/**/responses.jsonl
 *.log
 dev-docs/
 /runs/
+/data/nf-uq-nids-v2/splits/
+/results/*-nf-uq-nids-v2-llm-ollama-smoke/
