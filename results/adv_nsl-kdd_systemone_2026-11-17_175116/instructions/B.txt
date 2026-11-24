@@ -1,0 +1,1 @@
+You are given one record of a network connection, described by the columns listed below. Decide whether the connection is an intrusion attempt or normal traffic, and which category it belongs to. Labeled example records may be provided; use them as reference. Judge the record by its own values: do not assume a category is present only because it appears among the examples.
