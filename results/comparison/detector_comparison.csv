@@ -1,0 +1,11 @@
+detector,round,state_code,instruction_label,detected,passed,attacks_answered,detection_rate,false_alarms,false_alarm_rate,f1,attack_p_mean,newly_alerted,newly_passing,who_adapts,why_adapted
+gemini_decision/gemini-decision-1,1,N/B,B,0,31,31,0.0,2,0.1053,0.0,0.1489,0,0,defender,attack_passed
+gemini_decision/gemini-decision-1,2,N/R,R,15,16,31,0.4839,3,0.1579,0.6122,0.5223,15,0,attacker,attack_alerted
+gemini_decision/gemini-decision-1,3,S/R,R,24,7,31,0.7742,3,0.1579,0.8276,0.7407,9,0,attacker,attack_alerted
+gemini_decision/gemini-decision-1,4,N'/R,R,16,15,31,0.5161,3,0.1579,0.64,0.5117,0,8,defender,attack_passed
+gemini_decision/gemini-decision-1,5,N'/V3,V3,26,5,31,0.8387,4,0.2105,0.8525,0.7828,10,0,,max_rounds_reached
+systemone/Clef,1,N/B,B,1,29,30,0.0333,11,0.6111,0.0476,0.1673,0,0,defender,attack_passed
+systemone/Clef,2,N/R,R,16,15,31,0.5161,9,0.5294,0.5714,0.5296,14,0,attacker,attack_alerted
+systemone/Clef,3,S/R,R,30,0,30,1.0,9,0.5,0.8696,0.7027,15,0,attacker,attack_alerted
+systemone/Clef,4,N'/R,R,25,5,30,0.8333,9,0.5,0.7812,0.584,0,5,defender,attack_passed
+systemone/Clef,5,N'/V3,V3,29,0,29,1.0,10,0.5263,0.8529,0.7014,4,0,,max_rounds_reached

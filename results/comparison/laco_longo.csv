@@ -1,0 +1,98 @@
+detector,run,round,state_code,instruction_label,attacks_detected,attacks_passed,attack_errors,detection_rate,false_alarms,false_alarm_rate,f1,accuracy,balanced_accuracy,attempts_left,who_adapts,why_adapted
+Gemini Decision,adv_nsl-kdd_gemini_decision_2026-11-17_142949,1,N/B,B,0,31,0,0.0,2,0.1053,0.0,0.34,0.4474,50,defender,attack_passed
+Gemini Decision,adv_nsl-kdd_gemini_decision_2026-11-17_142949,2,N/R,R,15,16,0,0.4839,3,0.1579,0.6122,0.62,0.663,50,attacker,attack_alerted
+Gemini Decision,adv_nsl-kdd_gemini_decision_2026-11-17_142949,3,S/R,R,24,7,0,0.7742,3,0.1579,0.8276,0.8,0.8081,50,attacker,attack_alerted
+Gemini Decision,adv_nsl-kdd_gemini_decision_2026-11-17_142949,4,N'/R,R,17,14,0,0.5484,3,0.1579,0.6667,0.66,0.6952,49,defender,attack_passed
+Gemini Decision,adv_nsl-kdd_gemini_decision_2026-11-17_142949,5,N'/V3,V3,24,7,0,0.7742,4,0.2105,0.8136,0.78,0.7818,49,attacker,attack_alerted
+Gemini Decision,adv_nsl-kdd_gemini_decision_2026-11-17_142949,6,N'/V3,V3,23,8,0,0.7419,4,0.2105,0.7931,0.76,0.7657,48,defender,attack_passed
+Gemini Decision,adv_nsl-kdd_gemini_decision_2026-11-17_142949,7,N'/V4,V4,15,16,0,0.4839,2,0.1053,0.625,0.64,0.6893,48,attacker,regime_loosened
+Gemini Decision,adv_nsl-kdd_gemini_decision_2026-11-17_142949,8,N'/V4,V4,20,11,0,0.6452,2,0.1053,0.7547,0.74,0.7699,47,attacker,attack_alerted
+Gemini Decision,adv_nsl-kdd_gemini_decision_2026-11-17_142949,9,N'/V4,V4,15,16,0,0.4839,2,0.1053,0.625,0.64,0.6893,46,defender,attack_passed
+Gemini Decision,adv_nsl-kdd_gemini_decision_2026-11-17_142949,10,N'/V5,V5,25,6,0,0.8065,4,0.2105,0.8333,0.8,0.798,46,attacker,attack_alerted
+Gemini Decision,adv_nsl-kdd_gemini_decision_2026-11-17_142949,11,N'/V5,V5,20,11,0,0.6452,4,0.2105,0.7273,0.7,0.7173,45,defender,attack_passed
+Gemini Decision,adv_nsl-kdd_gemini_decision_2026-11-17_142949,12,N'/V6,V6,20,11,0,0.6452,2,0.1053,0.7547,0.74,0.7699,45,defender,attack_passed
+Gemini Decision,adv_nsl-kdd_gemini_decision_2026-11-17_142949,13,N'/V7,V7,27,4,0,0.871,2,0.1053,0.9,0.88,0.8829,45,attacker,attack_alerted
+Gemini Decision,adv_nsl-kdd_gemini_decision_2026-11-17_142949,14,N'/V7,V7,26,5,0,0.8387,2,0.1053,0.8814,0.86,0.8667,44,,stable
+Gemini Decision,adv_nsl-kdd_gemini_decision_2026-11-17_142949,15,N'/V7,V7,26,5,0,0.8387,2,0.1053,0.8814,0.86,0.8667,44,attacker,attack_passed
+Gemini Decision,adv_nsl-kdd_gemini_decision_2026-11-17_142949,16,N'/V7,V7,26,5,0,0.8387,2,0.1053,0.8814,0.86,0.8667,43,attacker,attack_passed
+Gemini Decision,adv_nsl-kdd_gemini_decision_2026-11-17_142949,17,N'/V7,V7,26,5,0,0.8387,2,0.1053,0.8814,0.86,0.8667,42,attacker,attack_passed
+Gemini Decision,adv_nsl-kdd_gemini_decision_2026-11-17_142949,18,N'/V7,V7,26,5,0,0.8387,2,0.1053,0.8814,0.86,0.8667,41,attacker,attack_passed
+Gemini Decision,adv_nsl-kdd_gemini_decision_2026-11-17_142949,19,N'/V7,V7,25,6,0,0.8065,2,0.1053,0.8621,0.84,0.8506,40,attacker,attack_passed
+Gemini Decision,adv_nsl-kdd_gemini_decision_2026-11-17_142949,20,N'/V7,V7,27,4,0,0.871,2,0.1053,0.9,0.88,0.8829,39,attacker,attack_alerted
+Gemini Decision,adv_nsl-kdd_gemini_decision_2026-11-17_142949,21,N'/V7,V7,25,6,0,0.8065,2,0.1053,0.8621,0.84,0.8506,38,attacker,attack_passed
+Gemini Decision,adv_nsl-kdd_gemini_decision_2026-11-17_142949,22,N'/V7,V7,26,5,0,0.8387,2,0.1053,0.8814,0.86,0.8667,37,attacker,attack_alerted
+Gemini Decision,adv_nsl-kdd_gemini_decision_2026-11-17_142949,23,N'/V7,V7,27,4,0,0.871,2,0.1053,0.9,0.88,0.8829,36,attacker,attack_alerted
+Gemini Decision,adv_nsl-kdd_gemini_decision_2026-11-17_142949,24,N'/V7,V7,27,4,0,0.871,2,0.1053,0.9,0.88,0.8829,35,attacker,attack_passed
+Gemini Decision,adv_nsl-kdd_gemini_decision_2026-11-17_142949,25,N'/V7,V7,26,5,0,0.8387,2,0.1053,0.8814,0.86,0.8667,34,attacker,attack_passed
+Gemini Decision,adv_nsl-kdd_gemini_decision_2026-11-17_142949,26,N'/V7,V7,26,5,0,0.8387,2,0.1053,0.8814,0.86,0.8667,33,attacker,attack_passed
+Gemini Decision,adv_nsl-kdd_gemini_decision_2026-11-17_142949,27,N'/V7,V7,23,8,0,0.7419,2,0.1053,0.8214,0.8,0.8183,32,defender,attack_passed
+Gemini Decision,adv_nsl-kdd_gemini_decision_2026-11-17_142949,28,N'/V8,V8,27,4,0,0.871,3,0.1579,0.8852,0.86,0.8565,32,attacker,attack_alerted
+Gemini Decision,adv_nsl-kdd_gemini_decision_2026-11-17_142949,29,N'/V8,V8,27,4,0,0.871,3,0.1579,0.8852,0.86,0.8565,31,defender,attack_passed
+Gemini Decision,adv_nsl-kdd_gemini_decision_2026-11-17_142949,30,N'/V9,V9,25,6,0,0.8065,4,0.2105,0.8333,0.8,0.798,31,defender,regime_loosened
+Gemini Decision,adv_nsl-kdd_gemini_decision_2026-11-17_142949,31,N'/V8,V8,27,4,0,0.871,3,0.1579,0.8852,0.86,0.8565,31,attacker,attack_alerted
+Gemini Decision,adv_nsl-kdd_gemini_decision_2026-11-17_142949,32,S/V8,V8,27,4,0,0.871,3,0.1579,0.8852,0.86,0.8565,31,defender,attack_passed
+Gemini Decision,adv_nsl-kdd_gemini_decision_2026-11-17_142949,33,S/V10,V10,27,4,0,0.871,3,0.1579,0.8852,0.86,0.8565,31,defender,attack_passed
+Gemini Decision,adv_nsl-kdd_gemini_decision_2026-11-17_142949,34,S/V7,V7,26,5,0,0.8387,2,0.1053,0.8814,0.86,0.8667,31,attacker,regime_loosened
+Gemini Decision,adv_nsl-kdd_gemini_decision_2026-11-17_142949,35,N'/V7,V7,27,4,0,0.871,2,0.1053,0.9,0.88,0.8829,30,attacker,attack_alerted
+Gemini Decision,adv_nsl-kdd_gemini_decision_2026-11-17_142949,36,S/V7,V7,26,5,0,0.8387,2,0.1053,0.8814,0.86,0.8667,30,attacker,attack_passed
+Gemini Decision,adv_nsl-kdd_gemini_decision_2026-11-17_142949,37,N'/V7,V7,26,5,0,0.8387,2,0.1053,0.8814,0.86,0.8667,29,attacker,attack_passed
+Gemini Decision,adv_nsl-kdd_gemini_decision_2026-11-17_142949,38,N'/V7,V7,19,12,0,0.6129,2,0.1053,0.7308,0.72,0.7538,28,defender,attack_passed
+Gemini Decision,adv_nsl-kdd_gemini_decision_2026-11-17_142949,39,N'/V11,V11,27,4,0,0.871,4,0.2105,0.871,0.84,0.8302,28,attacker,attack_alerted
+Gemini Decision,adv_nsl-kdd_gemini_decision_2026-11-17_142949,40,N'/V11,V11,27,4,0,0.871,4,0.2105,0.871,0.84,0.8302,27,defender,attack_passed
+Gemini Decision,adv_nsl-kdd_gemini_decision_2026-11-17_142949,41,N'/V12,V12,26,5,0,0.8387,4,0.2105,0.8525,0.82,0.8141,27,defender,regime_loosened
+Gemini Decision,adv_nsl-kdd_gemini_decision_2026-11-17_142949,42,N'/V13,V13,25,6,0,0.8065,3,0.1579,0.8475,0.82,0.8243,27,defender,regime_loosened
+Gemini Decision,adv_nsl-kdd_gemini_decision_2026-11-17_142949,43,N'/V14,V14,26,5,0,0.8387,4,0.2105,0.8525,0.82,0.8141,27,attacker,attack_alerted
+Gemini Decision,adv_nsl-kdd_gemini_decision_2026-11-17_142949,44,S/V14,V14,26,5,0,0.8387,4,0.2105,0.8525,0.82,0.8141,27,defender,attack_passed
+Gemini Decision,adv_nsl-kdd_gemini_decision_2026-11-17_142949,45,S/V7,V7,26,5,0,0.8387,2,0.1053,0.8814,0.86,0.8667,27,attacker,attack_passed
+Gemini Decision,adv_nsl-kdd_gemini_decision_2026-11-17_142949,46,N'/V7,V7,26,5,0,0.8387,2,0.1053,0.8814,0.86,0.8667,26,attacker,attack_passed
+Gemini Decision,adv_nsl-kdd_gemini_decision_2026-11-17_142949,47,N'/V7,V7,28,3,0,0.9032,2,0.1053,0.918,0.9,0.899,25,attacker,attack_alerted
+Gemini Decision,adv_nsl-kdd_gemini_decision_2026-11-17_142949,48,S/V7,V7,26,5,0,0.8387,2,0.1053,0.8814,0.86,0.8667,25,attacker,attack_passed
+Gemini Decision,adv_nsl-kdd_gemini_decision_2026-11-17_142949,49,N'/V7,V7,27,4,0,0.871,2,0.1053,0.9,0.88,0.8829,24,attacker,attack_alerted
+Gemini Decision,adv_nsl-kdd_gemini_decision_2026-11-17_142949,50,N'/V7,V7,25,6,0,0.8065,2,0.1053,0.8621,0.84,0.8506,23,,max_rounds_reached
+Clef,adv_nsl-kdd_systemone_2026-11-17_175116,1,N/B,B,1,30,0,0.0323,11,0.5789,0.0465,0.18,0.2267,50,defender,attack_passed
+Clef,adv_nsl-kdd_systemone_2026-11-17_175116,2,N/R,R,16,15,0,0.5161,10,0.5263,0.5614,0.5,0.4949,50,attacker,attack_alerted
+Clef,adv_nsl-kdd_systemone_2026-11-17_175116,3,S/R,R,31,0,0,1.0,10,0.5263,0.8611,0.8,0.7368,50,attacker,attack_alerted
+Clef,adv_nsl-kdd_systemone_2026-11-17_175116,4,N'/R,R,23,8,0,0.7419,10,0.5263,0.7188,0.64,0.6078,49,defender,attack_passed
+Clef,adv_nsl-kdd_systemone_2026-11-17_175116,5,N'/V3,V3,21,10,0,0.6774,8,0.4211,0.7,0.64,0.6282,49,attacker,regime_loosened
+Clef,adv_nsl-kdd_systemone_2026-11-17_175116,6,N'/V3,V3,29,2,0,0.9355,8,0.4211,0.8529,0.8,0.7572,48,attacker,attack_alerted
+Clef,adv_nsl-kdd_systemone_2026-11-17_175116,7,N'/V3,V3,21,10,0,0.6774,8,0.4211,0.7,0.64,0.6282,47,defender,attack_passed
+Clef,adv_nsl-kdd_systemone_2026-11-17_175116,8,N'/V4,V4,27,4,0,0.871,11,0.5789,0.7826,0.7,0.646,47,attacker,attack_alerted
+Clef,adv_nsl-kdd_systemone_2026-11-17_175116,9,N'/V4,V4,27,4,0,0.871,11,0.5789,0.7826,0.7,0.646,46,defender,attack_passed
+Clef,adv_nsl-kdd_systemone_2026-11-17_175116,10,N'/V5,V5,29,2,0,0.9355,9,0.4737,0.8406,0.78,0.7309,46,attacker,attack_alerted
+Clef,adv_nsl-kdd_systemone_2026-11-17_175116,11,N'/V5,V5,31,0,0,1.0,9,0.4737,0.8732,0.82,0.7632,45,attacker,attack_alerted
+Clef,adv_nsl-kdd_systemone_2026-11-17_175116,12,N'/V5,V5,30,1,0,0.9677,9,0.4737,0.8571,0.8,0.747,44,,stable
+Clef,adv_nsl-kdd_systemone_2026-11-17_175116,13,N'/V5,V5,30,1,0,0.9677,9,0.4737,0.8571,0.8,0.747,44,attacker,attack_passed
+Clef,adv_nsl-kdd_systemone_2026-11-17_175116,14,N'/V5,V5,31,0,0,1.0,9,0.4737,0.8732,0.82,0.7632,43,attacker,attack_alerted
+Clef,adv_nsl-kdd_systemone_2026-11-17_175116,15,N'/V5,V5,29,2,0,0.9355,9,0.4737,0.8406,0.78,0.7309,42,attacker,attack_passed
+Clef,adv_nsl-kdd_systemone_2026-11-17_175116,16,N'/V5,V5,20,11,0,0.6452,9,0.4737,0.6667,0.6,0.5857,41,defender,attack_passed
+Clef,adv_nsl-kdd_systemone_2026-11-17_175116,17,N'/V6,V6,12,19,0,0.3871,6,0.3158,0.4898,0.5,0.5357,41,defender,regime_loosened
+Clef,adv_nsl-kdd_systemone_2026-11-17_175116,18,N'/V7,V7,22,9,0,0.7097,11,0.5789,0.6875,0.6,0.5654,41,attacker,attack_alerted
+Clef,adv_nsl-kdd_systemone_2026-11-17_175116,19,N'/V7,V7,29,2,0,0.9355,11,0.5789,0.8169,0.74,0.6783,40,attacker,attack_alerted
+Clef,adv_nsl-kdd_systemone_2026-11-17_175116,20,N'/V7,V7,30,1,0,0.9677,11,0.5789,0.8333,0.76,0.6944,39,attacker,attack_alerted
+Clef,adv_nsl-kdd_systemone_2026-11-17_175116,21,N'/V7,V7,26,5,0,0.8387,11,0.5789,0.7647,0.68,0.6299,38,defender,attack_passed
+Clef,adv_nsl-kdd_systemone_2026-11-17_175116,22,N'/V8,V8,15,16,0,0.4839,6,0.3158,0.5769,0.56,0.584,38,defender,regime_loosened
+Clef,adv_nsl-kdd_systemone_2026-11-17_175116,23,N'/V9,V9,14,17,0,0.4516,5,0.2632,0.56,0.56,0.5942,38,defender,regime_loosened
+Clef,adv_nsl-kdd_systemone_2026-11-17_175116,24,N'/V10,V10,26,5,0,0.8387,10,0.5263,0.7761,0.7,0.6562,38,attacker,attack_alerted
+Clef,adv_nsl-kdd_systemone_2026-11-17_175116,25,N'/V10,V10,30,1,0,0.9677,10,0.5263,0.8451,0.78,0.7207,37,attacker,attack_alerted
+Clef,adv_nsl-kdd_systemone_2026-11-17_175116,26,N'/V10,V10,26,5,0,0.8387,10,0.5263,0.7761,0.7,0.6562,36,attacker,attack_passed
+Clef,adv_nsl-kdd_systemone_2026-11-17_175116,27,N'/V10,V10,19,12,0,0.6129,10,0.5263,0.6333,0.56,0.5433,35,defender,attack_passed
+Clef,adv_nsl-kdd_systemone_2026-11-17_175116,28,N'/V11,V11,21,10,0,0.6774,11,0.5789,0.6667,0.58,0.5492,35,attacker,attack_alerted
+Clef,adv_nsl-kdd_systemone_2026-11-17_175116,29,N'/V11,V11,19,12,0,0.6129,11,0.5789,0.623,0.54,0.517,34,defender,attack_passed
+Clef,adv_nsl-kdd_systemone_2026-11-17_175116,30,N'/V12,V12,22,9,0,0.7097,8,0.4211,0.7213,0.66,0.6443,34,attacker,attack_alerted
+Clef,adv_nsl-kdd_systemone_2026-11-17_175116,31,N'/V12,V12,28,3,0,0.9032,8,0.4211,0.8358,0.78,0.7411,33,attacker,attack_alerted
+Clef,adv_nsl-kdd_systemone_2026-11-17_175116,32,N'/V12,V12,18,13,0,0.5806,8,0.4211,0.6316,0.58,0.5798,32,defender,attack_passed
+Clef,adv_nsl-kdd_systemone_2026-11-17_175116,33,N'/V13,V13,7,24,0,0.2258,4,0.2105,0.3333,0.44,0.5076,32,defender,regime_loosened
+Clef,adv_nsl-kdd_systemone_2026-11-17_175116,34,N'/V14,V14,23,8,0,0.7419,10,0.5263,0.7188,0.64,0.6078,32,attacker,attack_alerted
+Clef,adv_nsl-kdd_systemone_2026-11-17_175116,35,N'/V14,V14,26,5,0,0.8387,10,0.5263,0.7761,0.7,0.6562,31,attacker,attack_alerted
+Clef,adv_nsl-kdd_systemone_2026-11-17_175116,36,N'/V14,V14,24,7,0,0.7742,10,0.5263,0.7385,0.66,0.6239,30,attacker,attack_passed
+Clef,adv_nsl-kdd_systemone_2026-11-17_175116,37,N'/V14,V14,24,7,0,0.7742,10,0.5263,0.7385,0.66,0.6239,29,attacker,attack_passed
+Clef,adv_nsl-kdd_systemone_2026-11-17_175116,38,N'/V14,V14,22,9,0,0.7097,10,0.5263,0.6984,0.62,0.5917,28,defender,attack_passed
+Clef,adv_nsl-kdd_systemone_2026-11-17_175116,39,N'/V15,V15,22,9,0,0.7097,10,0.5263,0.6984,0.62,0.5917,28,defender,attack_passed
+Clef,adv_nsl-kdd_systemone_2026-11-17_175116,40,N'/V16,V16,25,6,0,0.8065,7,0.3684,0.7937,0.74,0.719,28,attacker,attack_alerted
+Clef,adv_nsl-kdd_systemone_2026-11-17_175116,41,N'/V16,V16,28,3,0,0.9032,7,0.3684,0.8485,0.8,0.7674,27,attacker,attack_alerted
+Clef,adv_nsl-kdd_systemone_2026-11-17_175116,42,N'/V16,V16,23,8,0,0.7419,7,0.3684,0.7541,0.7,0.6868,26,attacker,attack_passed
+Clef,adv_nsl-kdd_systemone_2026-11-17_175116,43,N'/V16,V16,22,9,0,0.7097,7,0.3684,0.7333,0.68,0.6706,25,defender,attack_passed
+Clef,adv_nsl-kdd_systemone_2026-11-17_175116,44,N'/V17,V17,24,7,0,0.7742,9,0.4737,0.75,0.68,0.6503,25,attacker,attack_alerted
+Clef,adv_nsl-kdd_systemone_2026-11-17_175116,45,N'/V17,V17,28,3,0,0.9032,9,0.4737,0.8235,0.76,0.7148,24,attacker,attack_alerted
+Clef,adv_nsl-kdd_systemone_2026-11-17_175116,46,N'/V17,V17,23,8,0,0.7419,9,0.4737,0.7302,0.66,0.6341,23,defender,attack_passed
+Clef,adv_nsl-kdd_systemone_2026-11-17_175116,47,N'/V16,V16,22,9,0,0.7097,7,0.3684,0.7333,0.68,0.6706,23,,stable

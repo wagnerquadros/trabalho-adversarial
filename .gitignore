@@ -1,0 +1,22 @@
+.env
+__pycache__/
+.venv/
+.ruff_cache/
+.complexipy_cache/
+.pytest_cache/
+.coverage
+.DS_Store
+data/*
+!data/*/
+data/raw/
+data/*/pool.csv
+data/*/test.csv
+results/**/responses.jsonl
+# SQLite memories of the adversarial agents (and their journals), which are not evidence
+results/**/memory/
+*.db
+*.db-wal
+*.db-shm
+*.db-journal
+*.log
+dev-docs/
