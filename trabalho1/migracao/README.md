@@ -5,9 +5,7 @@ Destino: [wagnerquadros/trabalho-adversarial](https://github.com/wagnerquadros/t
 
 ## Código e histórico
 
-A branch Developer foi importada integralmente para jev-ids/ por git subtree, com seu histórico. Commit de origem: 4a7f2df530bcc5601129414e2c15e1e76e9d1fe7.
-O relatório continua na raiz. Diagramas, referências, licença e instruções de contribuição já existentes foram preservados. No README principal, somente os números das referências às issues foram atualizados.
-O README, a licença e a documentação originais do Jev IDS permanecem dentro de jev-ids/. Os commits importados pertencem aos autores da base e devem ser distinguidos das contribuições do grupo.
+A branch Developer foi importada integralmente para jev-ids/ por git subtree, com seu histórico. Commit de origem: 4a7f2df530bcc5601129414e2c15e1e76e9d1fe7. A issue #48 levou essa pasta para `trabalho1/jev-ids/`, ao lado deste registro. O relatório ficou no README da raiz durante o Trabalho 1 e hoje está em `trabalho1/README.md`. Diagramas, referências, licença e instruções de contribuição já existentes foram preservados. No relatório, somente os números das referências às issues foram atualizados. O README, a licença e a documentação originais do Jev IDS permanecem dentro de `trabalho1/jev-ids/`. Os commits importados pertencem aos autores da base e devem ser distinguidos das contribuições do grupo.
 
 ## Issues
 
