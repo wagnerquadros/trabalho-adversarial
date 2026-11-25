@@ -177,7 +177,7 @@ uv run jev-ids adversarial `
   --k 0
 ```
 
-`--attacker qwen` precisa ser explícito, porque o padrão do atacante é `claude`, e tanto Claude quanto Gemini (o que inclui `hydrogen`) recusam o papel de atacante (seção 6). O split `internal` tem 50 registros, 31 de ataque (18 `dos`, 8 `probe`, 4 `r2l`, 1 `u2r`) e 19 normais, e cada rodada faz 50 chamadas ao detector. O split `smoke` tem 5 registros e um único ataque, e por isso serve apenas para conferir chaves e conexão: cada rodada dá ao atacante um único veredito. O split `pilot` tem 300 registros (160 de ataque e 140 normais).
+O atacante padrão é `qwen`, porque Claude e Gemini (o que inclui `hydrogen`) recusam o papel de atacante (seção 6). O comando acima escreve `--attacker qwen` só para deixar a escolha visível. O split `internal` tem 50 registros, 31 de ataque (18 `dos`, 8 `probe`, 4 `r2l`, 1 `u2r`) e 19 normais, e cada rodada faz 50 chamadas ao detector. O split `smoke` tem 5 registros e um único ataque, e por isso serve apenas para conferir chaves e conexão, já que cada rodada dá ao atacante um único veredito. O split `pilot` tem 300 registros (160 de ataque e 140 normais).
 
 | Opção | Padrão | Efeito |
 |---|---|---|
@@ -185,7 +185,7 @@ uv run jev-ids adversarial `
 | `--split` | `smoke` | split julgado em toda rodada, em `data/nsl-kdd/splits/` |
 | `--detector` | obrigatória | `gemini_decision`, `systemone`, `jev`, `llm:deepseek`, `llm:openai` ou `llm:gemini` |
 | `--detector-model` | o do detector | outro modelo para o detector |
-| `--attacker`, `--defender` | `claude`, `hydrogen` | provedor do modelo de cada agente |
+| `--attacker`, `--defender` | `qwen`, `hydrogen` | provedor do modelo de cada agente |
 | `--attacker-model`, `--defender-model` | o do provedor | outro modelo para o agente |
 | `--rounds` | 5 | número máximo de rodadas |
 | `--max-attempts` | 3 | redações novas que o atacante pode submeter |

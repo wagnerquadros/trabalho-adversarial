@@ -263,7 +263,7 @@ def install_doubles(
     """Put the mock detector and two scripted models behind `run_adversarial`; returns the detector names it was asked to build."""
     built: list[str] = []
     models = {
-        "claude": ScriptedAgnoModel("scripted-attacker", attacker_script),
+        "qwen": ScriptedAgnoModel("scripted-attacker", attacker_script),
         "hydrogen": ScriptedAgnoModel("scripted-defender", defender_script),
     }
 
