@@ -28,5 +28,5 @@ git log --format='%an <%ae>' | sort -u
 Antes de abrir o pull request, formate os arquivos Markdown:
 
 ```bash
-npx prettier --check README.md CONTRIBUTING.md fontes/referencias.md
+npx prettier --check README.md CONTRIBUTING.md trabalho1/fontes/referencias.md
 ```

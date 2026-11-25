@@ -52,8 +52,8 @@ max-statements = 50
 
 [tool.pyright]
 typeCheckingMode = "strict"
-# `jev-ids/` is the Trabalho 1 copy of an older Jev IDS, kept as it was; its code imports a `jev_ids` that is not this one.
-exclude = ["jev-ids", "**/.*", "**/__pycache__", "**/node_modules"]
+# `trabalho1/jev-ids/` is the Trabalho 1 copy of an older Jev IDS, kept as it was. Its code imports a `jev_ids` that is not this one.
+exclude = ["trabalho1/jev-ids", "**/.*", "**/__pycache__", "**/node_modules"]
 
 [tool.pytest.ini_options]
 addopts = "--cov --cov-fail-under=80"
