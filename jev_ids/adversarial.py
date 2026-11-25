@@ -82,7 +82,7 @@ class AdversarialSpec:
     """Configuration for a closed-loop adversarial run.
 
     Attributes:
-        detector: `jev`, `gemini_decision` or `llm:<provider>`, the detectors whose instructions can be rewritten.
+        detector: `jev`, `gemini_decision`, `systemone` or `llm:<provider>`, the detectors whose instructions can be rewritten.
         dataset: the card of the dataset, `data/<name>/dataset.json`.
         split: the split every round judges, a file under `data/<name>/splits/`.
         attacker_provider: the Agno provider of the attacker's model (`agents.make_agent_model`).
@@ -105,7 +105,7 @@ class AdversarialSpec:
     detector: str
     dataset: Path
     split: str
-    attacker_provider: str = "claude"
+    attacker_provider: str = "qwen"
     attacker_model: str | None = None
     defender_provider: str = "hydrogen"
     defender_model: str | None = None

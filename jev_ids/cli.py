@@ -177,7 +177,7 @@ def _add_adversarial_parser(commands: Any) -> None:
     adv.add_argument("--split", default="smoke", help="split under data/<name>/splits/")
     adv.add_argument("--detector", required=True, help="jev, gemini_decision, systemone, llm:deepseek, llm:openai or llm:gemini")
     adv.add_argument("--detector-model", help="optional detector model override")
-    adv.add_argument("--attacker", default="claude", help="attacker Agno provider: qwen, claude, hydrogen, gemini, openai, deepseek")
+    adv.add_argument("--attacker", default="qwen", help="attacker Agno provider: qwen, claude, hydrogen, gemini, openai, deepseek")
     adv.add_argument("--attacker-model", help="optional attacker model id")
     adv.add_argument("--defender", default="hydrogen", help="defender Agno provider: hydrogen, qwen, claude, gemini, openai, deepseek")
     adv.add_argument("--defender-model", help="optional defender model id")
