@@ -421,12 +421,14 @@ A equipe é a mesma do Trabalho 1. Cada integrante descreve aqui a própria cont
 | Tuigg | a preencher |
 | Camilla | a preencher |
 | Pietra | a preencher |
-| nome a confirmar | a preencher |
-| nome a confirmar | a preencher |
+| Amanda | Abriu as issues #40 a #49 do Trabalho 2. Reuniu o material do Trabalho 1 em `trabalho1/` e criou a tag `t1-entrega` (#48, PR #50). Criou o workflow de testes, o `.env.example` e pôs o `ruff` no grupo `dev` (#45, PR #51). Trocou o atacante padrão para `qwen` (#49, PR #52). |
+| Lara | a preencher |
 
-Até o commit `d10bd4d`, o histórico do repositório tem 32 commits de Tuigg Barcelos sobre os 103 commits dos autores originais do Jev IDS.
+Os commits de cada integrante no Trabalho 2, sem os do Jev IDS original nem os do Trabalho 1, aparecem com `git shortlog -sn --no-merges 71e57a7..origin/main ^4b60e34`.
 
 **Uso de IA.** A implementação e este texto foram produzidos com apoio de IA. Cada integrante deve registrar o próprio uso de IA e a própria verificação.
+
+- Amanda: usou o Claude Code (Anthropic) para levantar as lacunas do Trabalho 2, escrever as issues e implementar os PRs #50 a #52. Antes de cada merge, o PR passou pela suíte de testes (281 testes) e pelo `pyright`, e o diff foi conferido.
 
 ## 11. Dados, licença e créditos
 
