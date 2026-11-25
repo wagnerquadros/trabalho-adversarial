@@ -1,0 +1,22 @@
+# Runs the test suite on every pull request and on every push to main (issue #45).
+name: tests
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d # v10.4.0
+        with:
+          enable-cache: true
+      # uv reads the Python version from .python-version. --locked fails when uv.lock is out of date with pyproject.toml.
+      - run: uv sync --locked
+      - run: uv run pytest

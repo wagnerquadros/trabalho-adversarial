@@ -136,7 +136,7 @@ cd trabalho-adversarial
 uv sync
 ```
 
-Crie um arquivo `.env` na raiz do repositório. O git o ignora, e o comando o lê ao iniciar.
+Copie o `.env.example` para `.env`, na raiz do repositório, e preencha as chaves. O git ignora o `.env`, e o comando o lê ao iniciar.
 
 ```env
 GEMINI_API_KEY=...
