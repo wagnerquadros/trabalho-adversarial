@@ -369,7 +369,7 @@ uv run --with matplotlib python -m scripts.plot_long_comparison results/adv_nsl-
 |---|---|---|
 | Interação e recorte | nota em `service` contra instruções do detector; atacante caixa-preta; defensor vê as notas testadas; demais atributos, exemplos, modelo e limiar 0,5 fixos | mantido (seções 1 e 2) |
 | Ações iniciais | rodada 1 sem decisão, com a nota que alega manutenção autorizada (`N`) e as instruções básicas (`B`); `R` declara os valores do registro dados não confiáveis | mantido |
-| Detectores | Qwen3:8b, via Ollama, e Laya multilingual, executados localmente no lugar do modelo Jev e avaliados separadamente | `gemini_decision`, `systemone` (Clef, no TokenLab), `jev`, `llm:deepseek`, `llm:openai` e `llm:gemini`; não há Qwen3:8b nem Laya como detector, nem Ollama (o Qwen do projeto é o modelo do atacante) |
+| Detectores | Qwen3:8b, via Ollama, e Laya multilingual, executados localmente no lugar do modelo Jev e avaliados separadamente | As execuções adaptativas apresentadas na seção 6 usam Gemini Decision (`gemini_decision`) e Clef (`systemone`). A implementação também oferece `jev`, `llm:deepseek`, `llm:openai` e `llm:gemini`. As integrações locais com Qwen3:8b e Laya não foram incorporadas ao laço adaptativo da `main`; a decisão está registrada na seção 7.1. |
 | Base de código | `Tucelos/Jev-ids-adversarial` (branch Developer), com a nota inserida por `jev_ids/context.py` | cópia de `jev-sec/jev-ids` no commit `71e57a7`; a nota é inserida por `jev_ids/evaluator.py` |
 | Agentes | atacante caixa-preta e defensor adaptativo, sem implementação definida | agentes Agno com modelo de linguagem e memória SQLite própria |
 | Ações do defensor | `B` ou `R`, a matriz 2×2 | `B`, `R` ou um texto próprio (`V3`, `V4`, …); estados como `N/V3` ficam fora da matriz |
@@ -382,6 +382,30 @@ uv run --with matplotlib python -m scripts.plot_long_comparison results/adv_nsl-
 | Custo ao usuário legítimo (AT4) | falso alarme sobre `service` legítimo raro sob `R` | falsos alarmes medidos em toda rodada e somados ao custo do defensor |
 | Falhas do detector | ausência de resposta contada como tráfego normal é um risco (S4, P4) | chamadas que falham são contadas à parte, fora das taxas e da regra de turno |
 | Pergunta | como a revisão das instruções influencia a detecção diante de notas adaptadas, no Qwen e no Laya | a pergunta central do Trabalho 2 (seção 1) |
+
+
+### 7.1 Decisão sobre os modelos da entrega
+
+Qwen3:8b via Ollama e Laya multilingual permaneceram no escopo das integrações e dos testes preliminares locais, que não foram incorporados ao laço adaptativo da entrega. Para o Trabalho 2, optou-se por consolidar a implementação já avaliada na `main`, com Gemini Decision e Clef como detectores, Qwen via TokenLab como atacante e Hydrogen como defensor, nas execuções apresentadas na seção 6.
+
+A integração local com Qwen3:8b permitiu realizar classificações e avaliações sob condições experimentais predefinidas. Entretanto, sua utilização no laço adaptativo exigiria trabalho adicional de integração e novas execuções para validar o funcionamento com os agentes de ataque e defesa. Por esse motivo, priorizou-se a consolidação da implementação já integrada e avaliada na `main`, mantendo a alternativa local como contribuição preliminar e possibilidade de extensão.
+
+No caso do Laya multilingual, as tentativas de utilização registraram falhas de conexão ao serviço local, que impediram obter classificações e concluir uma avaliação funcional. A ausência de um serviço operacional nos testes realizados inviabilizou sua utilização nas execuções da entrega.
+
+Essas escolhas refletem decisões de escopo, integração e disponibilidade operacional. Os testes disponíveis não sustentam uma conclusão de inferioridade dos modelos locais em relação aos detectores usados na entrega. Os procedimentos e resultados preliminares estão documentados em [integration-notes.md, na branch de visualização](https://github.com/wagnerquadros/trabalho-adversarial/blob/feat/adversarial-visualization-ui/jev-ids/docs/integration-notes.md).
+
+O Qwen3:8b utilizado localmente como detector e o Qwen utilizado via TokenLab como agente atacante correspondem a configurações e papéis distintos no experimento.
+
+### 7.2 Preservação das branches preliminares
+
+As branches `feat/qwen-ollama-integration` e `feat/adversarial-visualization-ui` serão preservadas como registro dos testes preliminares com classificação local pelo Qwen3:8b e visualização de condições experimentais predefinidas. Essa implementação não será incorporada à `main` do Trabalho 2, que utiliza um laço adaptativo com agentes de ataque e defesa. As próximas contribuições de Wagner partirão da `main` atual.
+
+Na implementação preliminar, a sequência das condições experimentais é predefinida: os resultados do detector não determinam a geração de novas notas nem a revisão das instruções por agentes adaptativos. Sua contribuição é a integração local, a execução das condições e a visualização dos resultados.
+
+O trabalho preservado nessas branches reúne oito commits distintos. O commit `0d1a920`, da integração com Ollama, também está presente no histórico da branch de visualização e é contabilizado uma única vez.
+
+Essas contribuições são registradas na seção 10 como trabalho preliminar, separado da implementação do laço adaptativo entregue na `main`.
+
 
 ## 8. Testes offline e dashboard
 
@@ -417,7 +441,7 @@ A equipe é a mesma do Trabalho 1. Cada integrante descreve aqui a própria cont
 
 | Integrante | Contribuição |
 |---|---|
-| Wagner | a preencher |
+| Wagner | Implementou a integração local do Qwen3:8b via Ollama e a interface de visualização e execução de condições experimentais predefinidas, com testes e documentação, nas branches `feat/qwen-ollama-integration` e `feat/adversarial-visualization-ui`. O trabalho reúne oito commits distintos e permanece preservado como implementação preliminar, sem incorporação ao laço adaptativo da `main`. Contribuiu para o registro das decisões de escopo e de preservação dessas branches nas issues #42 e #43, conforme as seções 7.1 e 7.2. |
 | Tuigg | a preencher |
 | Camilla | a preencher |
 | Pietra | a preencher |
@@ -429,6 +453,9 @@ Os commits de cada integrante no Trabalho 2, sem os do Jev IDS original nem os d
 **Uso de IA.** A implementação e este texto foram produzidos com apoio de IA. Cada integrante deve registrar o próprio uso de IA e a própria verificação.
 
 - Amanda: usou o Claude Code (Anthropic) para levantar as lacunas do Trabalho 2, escrever as issues e implementar os PRs #50 a #52. Antes de cada merge, o PR passou pela suíte de testes (281 testes) e pelo `pyright`, e o diff foi conferido.
+
+- Wagner: utilizou ChatGPT/Codex como apoio à integração local com Ollama, ao desenvolvimento da interface de visualização e à revisão da documentação das decisões de escopo.
+
 
 ## 11. Dados, licença e créditos
 

@@ -20,3 +20,4 @@ results/**/memory/
 *.db-journal
 *.log
 dev-docs/
+.idea/
